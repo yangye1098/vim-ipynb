@@ -1,3 +1,5 @@
 " set filttype detect for .ipynb
-    au BufRead,BufNewFile *.ipynb set filetype=ipynb
+augroup filetypedetect
+    au BufRead,BufNewFile *.ipynb setfiletype=ipynb
+augroup END
 
