@@ -20,6 +20,7 @@ formmater.from_ipynb()
 EOF
 
 au BufWritePost *.ipynb call ToIpynb()
+au Quitpre * call ShutDownKernel(1)
 
 function! FromIpynb()
     pyx formmater.from_ipynb()
@@ -35,7 +36,18 @@ function! IpynbRunLine()
     pyx run_line(vim_jupyter_shell)
 endfunction
 
+function! ShutDownKernel(silent)
+    if silent == 1
+        pyx shutdown_silent(vim_jupyter_shell)
+    else
+        pyx shutdown_verbose(vim_jupyter_shell)
+    endif
+endfunction
 
+function! ShutDownKernel()
+    pyx shutdown_silent(vim_jupyter_shell)
+
+endfunction
 
 "map <buffer><localleader>r :call MatRun() <cr><cr>
 "map <buffer><localleader>c :call MatRunCell()  <cr><cr>

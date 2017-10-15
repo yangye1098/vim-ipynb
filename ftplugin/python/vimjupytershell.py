@@ -236,8 +236,7 @@ class VimJupyterShell(SingletonConfigurable):
         self.vim_display_manager.handle_stdout("Kernel restart!")
         self.vim_display_manager.finish_stdout()
 
-    def ask_shutdown(self):
-        self.vim_display_manager.open_window(kind="stdout")
+    def ask_shutdown(self, silent=True):
         msg_id = self.client().shutdown(restart=False)
         while self.client.is_alive():
             try:
@@ -248,9 +247,11 @@ class VimJupyterShell(SingletonConfigurable):
                 pass
             else:
                 break
-        self.vim_display_manager.handle_stdout("The kernel has been shut down: "
+        if silent is False:
+            self.vim_display_manager.open_window(kind="stdout")
+            self.vim_display_manager.handle_stdout("The kernel has been shut down: "
                                                + msg["header"]["session"])
-        self.vim_display_manager.finish_stdout()
+            self.vim_display_manager.finish_stdout()
 
     # This is set from payloads in handle_execute_reply
     next_input = None

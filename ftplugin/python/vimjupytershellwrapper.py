@@ -18,8 +18,12 @@ def run_cell(shell):
     shell.run_cell(code, store_history=True)
 
 
-def shutdown(shell):
-    shell.ask_shutdown(restart=False)
+def shutdown_silent(shell):
+    shell.ask_shutdown(silent=True)
+
+
+del shutdown_verbose(shell)
+    shell.ask_shutdown(silent=False)
 
 
 def restart(shell):
