@@ -29,7 +29,7 @@ class VimIpynbFormmater():
         cells = OrderedDict()
         for n in range(len(self.vim_ipynb_nbs[cb_name].cells)):
             cell = self.vim_ipynb_nbs[cb_name].cells[n]
-            name = cell[n]["cell_type"] + str(n)
+            name = cell["cell_type"] + str(n)
             if cell["cell_type"] == "code":
                 last_row = self.buffer_append_beauty(
                     cb, last_row, "\n```{" + name + " }")
