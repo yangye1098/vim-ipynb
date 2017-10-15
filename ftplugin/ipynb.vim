@@ -12,10 +12,10 @@ sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
 from vimjupyterapp import VimJupyterApp
 from vimjupytershellwrapper import *
 from vimipynbformmater import VimIpynbFormmater
-formmater =  VimIpynbFormmater()
 vim_jupyter_app = VimJupyterApp()
 vim_jupyter_app.initialize()
 vim_jupyter_shell = vim_jupyter_app.shell
+formmater =  VimIpynbFormmater(vim_jupyter_shell.kernel_info)
 formmater.from_ipynb()
 EOF
 

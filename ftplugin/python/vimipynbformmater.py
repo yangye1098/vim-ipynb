@@ -1,5 +1,9 @@
 import vim
 import nbformat
+from nbformat.v4 import (
+    nbformat as current_nbformat,
+    nbformat_minor as current_nbformat_minor
+)
 import re
 from collections import OrderedDict
 
@@ -7,12 +11,16 @@ from collections import OrderedDict
 class VimIpynbFormmater():
     vim_ipynb_nbs = dict()
     vim_ipynb_nodes = dict()
+    kernel_info = {}
+
+    def __init__(self, kernel_info):
+        self.kernel_info = kernel_info
 
     def to_ipynb(self):
         cb = vim.current.buffer
         cb_name = vim.current.buffer.name
 
-        self.adjust_order(cb, cb_name)
+        self.update_from_buffer(cb, cb_name)
 
         with open(cb_name, "w") as cf:
             nbformat.write(self.vim_ipynb_nbs[cb_name], cf)
@@ -22,7 +30,14 @@ class VimIpynbFormmater():
         cb_name = vim.current.buffer.name
 
         with open(cb_name) as cf:
-            self.vim_ipynb_nbs[cb_name] = (nbformat.read(cf, as_version=4))
+            try:
+                self.vim_ipynb_nbs[cb_name] = nbformat.read(cf, as_version=4)
+            except nbformat.NBFormatError:
+                self.vim_ipynb_nbs[cb_name] = self.nb_from_buffer(cb)
+            else:
+                return
+            finally:
+                pass
 
         cb[:] = None
         last_row = 1
@@ -45,20 +60,28 @@ class VimIpynbFormmater():
             cells[name] = self.vim_ipynb_nbs[cb_name].cells[n]
         self.vim_ipynb_nodes[cb_name] = cells
 
-    def buffer_append_beauty(self, cb, last_row, msg=""):
-        msg_list = msg.split('\n')
-        if cb[last_row - 1] == "":
-            cb.append(msg_list, last_row-1)
-        else:
-            cb.append(msg_list, last_row)
-        return last_row + len(msg_list)
+    def update_from_buffer(self, cb, cb_name):
+        self.vim_ipynb_nbs[cb_name].metadata["language_info"] \
+            = self.kernel_info["language_info"]
+        self.vim_ipynb_nbs[cb_name].nbformat = current_nbformat
+        self.vim_ipynb_nbs[cb_name].nbformat_minor = current_nbformat_minor
+        new_cells = self.cells_from_buffer(
+            self, cb, self.vim_ipynb_nodes[cb_name])
+        for cell in new_cells:
+            self.vim_ipynb_nbs[cb_name].cells.append(cell)
 
-    def adjust_order(self, cb, cb_name):
-        in_code = False
+    def nb_from_buffer(self, cb):
         new_nb = nbformat.v4.new_notebook()
-        new_nb.metadata = self.vim_ipynb_nbs[cb_name].metadata
-        new_nb.nbformat = self.vim_ipynb_nbs[cb_name].nbformat
-        new_nb.nbformat_minor = self.vim_ipynb_nbs[cb_name].nbformat_minor
+        new_nb.metadata["language_info"] = self.kernel_info["language_info"]
+        new_nb.nbformat = current_nbformat
+        new_nb.nbformat_minor = current_nbformat_minor
+        new_cells = self.cells_from_buffer(self, cb, old_cells={})
+        for cell in new_cells:
+            new_nb.cells.append(cell)
+        return new_nb
+
+    def cells_from_buffer(self, cb, old_cells):
+        in_code = False
         new_cells = OrderedDict()
         name = None
 
@@ -71,8 +94,8 @@ class VimIpynbFormmater():
 
                     name = matchObj.group(1)
                     if name.isalnum():
-                        if name in self.vim_ipynb_nodes[cb_name]:
-                            new_cells[name] = self.vim_ipynb_nodes[cb_name][name]
+                        if name in old_cells:
+                            new_cells[name] = old_cells[name]
                             new_cells[name]["source"] = ""
                         else:
                             new_cells[name] = nbformat.v4.new_markdown_cell()
@@ -92,8 +115,8 @@ class VimIpynbFormmater():
                         in_code = True
                         name = matchObj.group(1)
                         if name.isalnum():
-                            if name in self.vim_ipynb_nodes[cb_name]:
-                                new_cells[name] = self.vim_ipynb_nodes[cb_name][name]
+                            if name in old_cells:
+                                new_cells[name] = old_cells[name]
                                 new_cells[name]["source"] = ""
                             else:
                                 new_cells[name] = nbformat.v4.new_code_cell()
@@ -114,7 +137,12 @@ class VimIpynbFormmater():
                     in_code = False
                 else:
                     new_cells[name]["source"] += line + "\n"
-        for name in new_cells:
-            new_nb.cells.append(new_cells[name])
-        self.vim_ipynb_nodes[cb_name] = new_cells
-        self.vim_ipynb_nbs[cb_name] = new_nb
+        return new_cells
+
+    def buffer_append_beauty(self, cb, last_row, msg=""):
+        msg_list = msg.split('\n')
+        if cb[last_row - 1] == "":
+            cb.append(msg_list, last_row-1)
+        else:
+            cb.append(msg_list, last_row)
+        return last_row + len(msg_list)
