@@ -2,6 +2,7 @@ import vim
 
 
 def run_line(shell):
+    print("run line")
     vim.command(".y j")
     vim.command("j")
     code = vim.eval("@j")
