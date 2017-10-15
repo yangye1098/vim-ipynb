@@ -8,7 +8,7 @@ end
 
 pyx << EOF
 import sys
-sys.path.append("/home/eric/.vim/bundle/vim-ipynb/ftplugin/python/")
+sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
 from vimjupyterapp import VimJupyterApp
 from vimjupytershellwrapper import *
 from vimipynbformmater import VimIpynbFormmater
@@ -16,24 +16,23 @@ formmater =  VimIpynbFormmater()
 vim_jupyter_app = VimJupyterApp()
 vim_jupyter_app.initialize()
 vim_jupyter_shell = vim_jupyter_app.shell
+formmater.from_ipynb()
 EOF
 
-"call FromIpynb()
-
-"au BufWritePost *.ipynb call ToIpynb()
+au BufWritePost *.ipynb call ToIpynb()
 
 function! FromIpynb()
     pyx formmater.from_ipynb()
 endfunction
 
 function! ToIpynb()
-    pyx to_ipynb()
+    pyx formmater.to_ipynb()
 endfunction
 
 function! IpynbRunLine()
     ToIpynb()
     echom "Run Line!"
-    pyx run_line(vim_jupyter_app)
+    pyx run_line(vim_jupyter_shell)
 endfunction
 
 

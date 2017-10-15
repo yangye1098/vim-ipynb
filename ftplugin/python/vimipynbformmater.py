@@ -33,12 +33,14 @@ class VimIpynbFormmater():
             if cell["cell_type"] == "code":
                 last_row = self.buffer_append_beauty(
                     cb, last_row, "\n```{" + name + " }")
-                last_row = self.buffer_append_beauty(cell["source"] + "\n```")
+                last_row = self.buffer_append_beauty(
+                    cb, last_row, cell["source"] + "\n```")
 
             elif cell["cell_type"] == "markdown":
                 last_row = self.buffer_append_beauty(
                     cb, last_row, "\n#%%{" + name + " }")
-                last_row = self.buffer_append_beauty(cell["source"] + "\n")
+                last_row = self.buffer_append_beauty(
+                    cb, last_row, cell["source"])
 
             cells[name] = self.vim_ipynb_nbs[cb_name].cells[n]
         self.vim_ipynb_nodes[cb_name] = cells
@@ -58,11 +60,15 @@ class VimIpynbFormmater():
         new_nb.nbformat = self.vim_ipynb_nbs[cb_name].nbformat
         new_nb.nbformat_minor = self.vim_ipynb_nbs[cb_name].nbformat_minor
         new_cells = OrderedDict()
+        name = None
 
         for line in cb:
             if not in_code:
-                matchObj = re.match(r'^#%%\{(.*?)\s')
+                matchObj = re.match(r'^#%%\{(.*?)\s', line)
                 if matchObj:
+                    if name is not None:
+                        new_cells[name]["source"] = new_cells[name]["source"][:-1]
+
                     name = matchObj.group(1)
                     if name.isalnum():
                         if name in self.vim_ipynb_nodes[cb_name]:
@@ -79,8 +85,10 @@ class VimIpynbFormmater():
                             one letter")
                     continue
                 else:
-                    matchObj = re.match(r'^```\{(.*?)\s')
+                    matchObj = re.match(r'^```\{(.*?)\s', line)
                     if matchObj:
+                        if name is not None:
+                            new_cells[name]["source"] = new_cells[name]["source"][:-1]
                         in_code = True
                         name = matchObj.group(1)
                         if name.isalnum():
@@ -98,13 +106,14 @@ class VimIpynbFormmater():
                                 one letter")
                         continue
                     else:
-                        new_cells[name]["source"] += line
+                        if name is not None:
+                            new_cells[name]["source"] += line + "\n"
             elif in_code:
-                matchObj = re.match(r'^```\s')
+                matchObj = re.match(r'^```\s*', line)
                 if matchObj:
                     in_code = False
                 else:
-                    new_cells[name]["source"] += line
+                    new_cells[name]["source"] += line + "\n"
         for name in new_cells:
             new_nb.cells.append(new_cells[name])
         self.vim_ipynb_nodes[cb_name] = new_cells
