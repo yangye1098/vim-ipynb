@@ -8,8 +8,10 @@ end
 
 pyxfile /home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimipynbformmater.py
 pyx << EOF
-from /home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimjupyterapp.py import VimJupyterApp
-from /home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimjupytershellwrapper.py import *
+import sys
+sys.path.append("/home/eric/.vim/bundle/vim-ipynb/ftplugin/python/")
+from vimjupyterapp import VimJupyterApp
+from vimjupytershellwrapper import *
 vim_jupyter_app = VimJupyterApp()
 vim_jupyter_app.initialize()
 vim_jupter_shell = vim_jupyter_app.shell
