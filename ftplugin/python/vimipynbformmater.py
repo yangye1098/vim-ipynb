@@ -31,11 +31,10 @@ class VimIpynbFormmater():
 
         with open(cb_name) as cf:
             try:
-                self.vim_ipynb_nbs[cb_name] = nbformat.read(cf, as_version=4)
-            except nbformat.NBFormatError:
+                self.vim_ipynb_nbs[cb_name] = nbformat.read(
+                    cf, as_version=current_nbformat)
+            except nbformat.reader.NotJSONError:
                 self.vim_ipynb_nbs[cb_name] = self.nb_from_buffer(cb)
-            else:
-                return
             finally:
                 pass
 
@@ -66,18 +65,18 @@ class VimIpynbFormmater():
         self.vim_ipynb_nbs[cb_name].nbformat = current_nbformat
         self.vim_ipynb_nbs[cb_name].nbformat_minor = current_nbformat_minor
         new_cells = self.cells_from_buffer(
-            self, cb, self.vim_ipynb_nodes[cb_name])
+            cb, self.vim_ipynb_nodes[cb_name])
         for cell in new_cells:
-            self.vim_ipynb_nbs[cb_name].cells.append(cell)
+            self.vim_ipynb_nbs[cb_name].cells.append(new_cells[cell])
 
     def nb_from_buffer(self, cb):
         new_nb = nbformat.v4.new_notebook()
         new_nb.metadata["language_info"] = self.kernel_info["language_info"]
         new_nb.nbformat = current_nbformat
         new_nb.nbformat_minor = current_nbformat_minor
-        new_cells = self.cells_from_buffer(self, cb, old_cells={})
+        new_cells = self.cells_from_buffer(cb, old_cells=dict())
         for cell in new_cells:
-            new_nb.cells.append(cell)
+            new_nb.cells.append(new_cells[cell])
         return new_nb
 
     def cells_from_buffer(self, cb, old_cells):
@@ -90,7 +89,7 @@ class VimIpynbFormmater():
                 matchObj = re.match(r'^#%%\{(.*?)[\s\}]', line)
                 if matchObj:
                     if name is not None:
-                        new_cells[name]["source"] = new_cells[name]["source"][:-1]
+                        new_cells[name]["source"] = new_cells[name]["source"][:-2]
 
                     name = matchObj.group(1)
                     if name.isalnum():
@@ -111,7 +110,7 @@ class VimIpynbFormmater():
                     matchObj = re.match(r'^```\{(.*?)[\s\}]', line)
                     if matchObj:
                         if name is not None:
-                            new_cells[name]["source"] = new_cells[name]["source"][:-1]
+                            new_cells[name]["source"] = new_cells[name]["source"][:-2]
                         in_code = True
                         name = matchObj.group(1)
                         if name.isalnum():

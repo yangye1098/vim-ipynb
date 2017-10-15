@@ -31,7 +31,7 @@ function! ToIpynb()
 endfunction
 
 function! IpynbRunLine()
-    ToIpynb()
+    call ToIpynb()
     echom "Run Line!"
     pyx run_line(vim_jupyter_shell)
 endfunction
