@@ -232,12 +232,12 @@ class VimJupyterShell(SingletonConfigurable):
 
     def ask_restart(self):
         self.vim_display_manager.open_window(kind="stdout")
-        self.kernel_manager().restart_kernel()
+        self.kernel_manager.restart_kernel()
         self.vim_display_manager.handle_stdout("Kernel restart!")
         self.vim_display_manager.finish_stdout()
 
     def ask_shutdown(self, silent=True):
-        msg_id = self.client().shutdown(restart=False)
+        msg_id = self.client.shutdown(restart=False)
         while self.client.is_alive():
             try:
                 msg = self.client.shell_channel.get_msg(block=False, timeout=0.05)
