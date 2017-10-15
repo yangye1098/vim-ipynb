@@ -16,7 +16,6 @@ formmater =  VimIpynbFormmater()
 vim_jupyter_app = VimJupyterApp()
 vim_jupyter_app.initialize()
 vim_jupyter_shell = vim_jupyter_app.shell
-vim_jupyter_shell.run_cell("print(\"Hello World!\")", store_history=True);
 EOF
 
 "call FromIpynb()
