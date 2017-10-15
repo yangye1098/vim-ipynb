@@ -20,14 +20,14 @@ from traitlets import (
 
 from jupyter_core.application import base_flags, base_aliases
 
-from jupyter_console.blocking import BlockingKernelClient
-from jupyter_console.restarter import KernelRestarter
-from jupyter_console import KernelManager, tunnel_to_kernel, find_connection_file, connect
-from jupyter_console.kernelspec import NoSuchKernel
-from jupyter_console.session import Session
+from jupyter_client.blocking import BlockingKernelClient
+from jupyter_client.restarter import KernelRestarter
+from jupyter_client import KernelManager, tunnel_to_kernel, find_connection_file, connect
+from jupyter_client.kernelspec import NoSuchKernel
+from jupyter_client.session import Session
 
 
-from jupyter_console.localinterfaces import localhost
+from jupyter_client.localinterfaces import localhost
 
 from .vimjupytershell import VimJupyterShell
 from . import __version__
