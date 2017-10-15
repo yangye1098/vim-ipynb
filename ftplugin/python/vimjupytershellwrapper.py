@@ -22,7 +22,7 @@ def shutdown_silent(shell):
     shell.ask_shutdown(silent=True)
 
 
-del shutdown_verbose(shell)
+def shutdown_verbose(shell):
     shell.ask_shutdown(silent=False)
 
 
