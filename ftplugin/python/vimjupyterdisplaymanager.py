@@ -4,12 +4,12 @@ import vim
 
 class VimJupterDisplayManager():
     """ Deal with the output display in Vim """
-    prompt = ""
 
     stdout_buffer_name = "Vim-Jupter-Output"
     stdout_buffer = None
     stdout_ratio = 3
     stdout_dir = "above"
+    stdout_last_row = 1
 
     stdin_buffer_name = "Vim-Jupter-Input"
     stdin_buffer = None
@@ -34,6 +34,7 @@ class VimJupterDisplayManager():
             vim.command(cmd)
             self.stdout_buffer = vim.current.buffer
             self.clear_stdout_buffer()
+            self.stdout_last_row = vim.current.window.cursor[0]
         elif kind == "stdin":
             cmd = self.open_stdin_window()
             vim.command(cmd)
@@ -65,18 +66,19 @@ class VimJupterDisplayManager():
             self.win_gotoid(stdout_id)
             cmd = "set noreadonly modifiable"
         else:
-            cmd += "+set\ noreadonly\ modifiable" + \
-                self.stdin_buffer_name
+            cmd += "+set\ noreadonly\ modifiable " + \
+                self.stdout_buffer_name
         return cmd
 
-    def handle_prompt(self, prompt):
-        self.prompt = prompt
-
     def handle_stdout(self, msg=""):
-        output = self.prompt + msg
-        if output:
-            self.stdout_buffer.append(msg.split('\n'))
-        self.prompt = ""
+        if msg:
+            msg_list = msg.split('\n')
+            if self.stdout_buffer[self.stdout_last_row - 1] != '':
+                self.stdout_buffer.append(msg_list)
+            else:
+                self.stdout_buffer.append(msg_list,
+                                          self.stdout_last_row - 1)
+            self.stdout_last_row += len(msg_list)
 
     def clear_stdout_buffer(self):
         if self.stdout_buffer is not None:
@@ -93,7 +95,7 @@ class VimJupterDisplayManager():
             self.win_gotoid(stdin_id)
             cmd = "set noreadonly modifiable"
         else:
-            cmd = "split +set\ noreadonly\ modifiable " + \
+            cmd = "belowright 2split +set\ noreadonly\ modifiable " + \
                 self.stdin_buffer_name
         return cmd
 
@@ -113,3 +115,6 @@ class VimJupterDisplayManager():
 
     def change_ratio(self, ratio):
         self.ratio = ratio
+
+    def echom(msg):
+        vim.command("echom " + msg)

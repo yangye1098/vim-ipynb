@@ -3,6 +3,7 @@ from __future__ import print_function
 
 import base64
 import errno
+import sys
 from io import BytesIO
 import os
 import signal
@@ -24,8 +25,10 @@ from traitlets.config import SingletonConfigurable
 
 from jupyter_console.zmqhistory import ZMQHistoryManager
 
-from . import __version__
-from .vimjupyterdisplaymanager import VimJupterDisplayManager
+sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
+
+from _version import __version__
+from vimjupyterdisplaymanager import VimJupterDisplayManager
 
 
 class VimJupyterShell(SingletonConfigurable):
@@ -222,6 +225,13 @@ class VimJupyterShell(SingletonConfigurable):
                     self.kernel_info = reply['content']
                     return
 
+    def init_io(self):
+        if sys.platform not in {'win32', 'cli'}:
+            return
+
+        import colorama
+        colorama.init()
+
     def ask_exit(self):
         self.keep_running = False
 
@@ -240,6 +250,8 @@ class VimJupyterShell(SingletonConfigurable):
           history. For user code calling back into IPython's machinery, this
           should be set to False.
         """
+
+        self.vim_display_manager.open_window(kind="stdout")
         if (not cell) or cell.isspace():
             # pressing enter flushes any pending display
             self.handle_iopub()
@@ -275,6 +287,7 @@ class VimJupyterShell(SingletonConfigurable):
             else:
                 break
         self._executing = False
+        self.vim_display_manager.finish_stdout()
 
     # -----------------
     # message handlers
@@ -288,7 +301,6 @@ class VimJupyterShell(SingletonConfigurable):
 
             content = msg["content"]
             status = content['status']
-
             if status == 'aborted':
                 self.write('Aborted\n')
                 return
@@ -391,12 +403,13 @@ class VimJupyterShell(SingletonConfigurable):
 
            It only displays output that is caused by this session.
         """
-        self.vim_display_manager.open_window(kind="stdout")
+
         output_handler = self.vim_display_manager.handle_stdout
         clear_buffer = self.vim_display_manager.clear_stdout_buffer
 
         while self.client.iopub_channel.msg_ready():
             sub_msg = self.client.iopub_channel.get_msg()
+
             msg_type = sub_msg['header']['msg_type']
             # parent = sub_msg["parent_header"]
 
@@ -409,6 +422,7 @@ class VimJupyterShell(SingletonConfigurable):
                 if msg_type == 'status':
                     self._execution_state = sub_msg["content"]["execution_state"]
                 elif msg_type == 'stream':
+                    output_handler("Out[{}]: ".format(self.execution_count))
                     if sub_msg["content"]["name"] == "stdout":
                         if self._pending_clearoutput:
                             clear_buffer()
@@ -428,8 +442,9 @@ class VimJupyterShell(SingletonConfigurable):
                         self._pending_clearoutput = False
                     self.execution_count = int(
                         sub_msg["content"]["execution_count"])
+                    output_handler("Out[{}]: ".format(self.execution_count))
+
                     if not self.from_here(sub_msg):
-                        self.vim_display_manager.open_window(kind="stdout")
                         output_handler(
                             self.other_output_prefix)
                     format_dict = sub_msg["content"]["data"]
@@ -449,6 +464,7 @@ class VimJupyterShell(SingletonConfigurable):
                         output_handler()
                     output_handler(text_repr)
 
+
                 elif msg_type == 'display_data':
                     data = sub_msg["content"]["data"]
                     handled = self.handle_rich_data(data)
@@ -467,8 +483,8 @@ class VimJupyterShell(SingletonConfigurable):
                         output_handler(
                             self.other_output_prefix)
                     output_handler(
-                        'In [{}]: '.format(content['execution_count']) +
-                        content['code']+'\n')
+                        "In [{0}]: ".format(content['execution_count']) +
+                        content['code'] + "\n")
 
                 elif msg_type == 'clear_output':
                     if sub_msg["content"]["wait"]:
@@ -479,7 +495,7 @@ class VimJupyterShell(SingletonConfigurable):
                 elif msg_type == 'error':
                     for frame in sub_msg["content"]["traceback"]:
                         output_handler(frame)
-        self.vim_display_manager.finish_stdout()
+
 
     _imagemime = {
         'image/png': 'png',
@@ -582,3 +598,4 @@ class VimJupyterShell(SingletonConfigurable):
             if not (self.client.stdin_channel.msg_ready()
                     or self.client.shell_channel.msg_ready()):
                 self.client.input(raw_data)
+

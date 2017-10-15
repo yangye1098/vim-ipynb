@@ -29,8 +29,10 @@ from jupyter_client.session import Session
 
 from jupyter_client.localinterfaces import localhost
 
-from .vimjupytershell import VimJupyterShell
-from . import __version__
+sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
+
+from vimjupytershell import VimJupyterShell
+from _version import  __version__
 
 ConnectionFileMixin = connect.ConnectionFileMixin
 
@@ -127,6 +129,8 @@ class VimJupyterApp(ConnectionFileMixin):
     shell_class = VimJupyterShell
 
     kernel_argv = List(Unicode())
+
+    runtime_dir = Unicode()
 
     # connection info:
 
@@ -365,8 +369,9 @@ class VimJupyterApp(ConnectionFileMixin):
         Classes which mix this class in should call:
                JupyterConsoleApp.initialize(self,argv)
         """
-        if self._dispatching:
-            return
+        # if self._dispatching:
+        #     return
+        self.runtime_dir = os.getcwd()
         self.init_connection_file()
         self.init_ssh()
         self.init_kernel_manager()

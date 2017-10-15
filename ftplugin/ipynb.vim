@@ -14,16 +14,21 @@ from vimjupyterapp import VimJupyterApp
 from vimjupytershellwrapper import *
 vim_jupyter_app = VimJupyterApp()
 vim_jupyter_app.initialize()
-vim_jupter_shell = vim_jupyter_app.shell
+vim_jupyter_shell = vim_jupyter_app.shell
+vim_jupyter_shell.run_cell("print(\"Hello World!\")", store_history=True);
 EOF
 
+function! IpynbRunLine()
+    echom "Run Line!"
+    pyx run_line(vim_jupyter_app)
+endfunction
 
 
 
 "map <buffer><localleader>r :call MatRun() <cr><cr>
 "map <buffer><localleader>c :call MatRunCell()  <cr><cr>
 "map <buffer><localleader>g :call MatRunCellAdvanced()  <cr><cr>
-nmap <buffer><space> :pyx run_line(vim_jupyter_shell)  <cr>
+nmap <buffer><space> :call IpynbRunLine()  <cr>
 "map <buffer><f5> :call MatRunExtern() <cr><cr>
 "map <buffer><localleader>p :call MatDisp()  <cr><cr>
 "map <buffer><localleader>h :call MatHelp()  <cr><cr>
