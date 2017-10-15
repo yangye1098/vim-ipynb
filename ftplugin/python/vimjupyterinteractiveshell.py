@@ -46,9 +46,9 @@ from prompt_toolkit.styles import PygmentsStyle
 from pygments.styles import get_style_by_name
 from pygments.token import Token
 
-import vim
 
 from . import __version__
+from .vimjupyterdisplaymanager import VimJupterDisplayManager
 
 
 class VimJupyterInteractiveShell(SingletonConfigurable):
@@ -109,6 +109,8 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
         before being presumed dead.
         """
     )
+
+    vim_display_manager = VimJupterDisplayManager()
 
     image_handler = Enum(
         ('PIL', 'stream', 'tempfile', 'callable'),
@@ -289,10 +291,12 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
             # Simple restricted interface for tests so we can find prompts with
             # pexpect. Multi-line input not supported.
             def prompt():
-                return cast_unicode_py2(input('In [%d]: ' % self.execution_count))
+                return self.vim_display_manager.handle_stdin(
+                    'In [{}]: '.format(self.execution_count))
             self.prompt_for_code = prompt
-            self.print_out_prompt = \
-                lambda: print('Out[%d]: ' % self.execution_count, end='')
+            self.print_out_prompt = lambda: \
+                self.vim_display_manager.handle_prompt(
+                    'Out[%d]: ' % self.execution_count)
             return
 
         kbmanager = KeyBindingManager.for_prompt()
@@ -649,26 +653,32 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
                 if msg_type == 'status':
                     self._execution_state = sub_msg["content"]["execution_state"]
                 elif msg_type == 'stream':
+                    self.vim_display_manager.open_window(kind="stdout")
                     if sub_msg["content"]["name"] == "stdout":
                         if self._pending_clearoutput:
-                            print("\r", end="")
+                            self.vim_display_manager.clear_stdout_buffer()
                             self._pending_clearoutput = False
-                        print(sub_msg["content"]["text"], end="")
-                        sys.stdout.flush()
+                        self.vim_display_manager.handle_stdout(
+                            sub_msg["content"]["text"])
+                        self.vim_display_manager.finish_stdout()
                     elif sub_msg["content"]["name"] == "stderr":
                         if self._pending_clearoutput:
-                            print("\r", file=sys.stderr, end="")
+                            self.vim_display_manager.clear_stdout_buffer()
                             self._pending_clearoutput = False
-                        print(sub_msg["content"]["text"], file=sys.stderr, end="")
-                        sys.stderr.flush()
+                        self.vim_display_manager.handle_stdout(
+                            sub_msg["content"]["text"])
+                        self.vim_display_manager.finish_stdout()
 
                 elif msg_type == 'execute_result':
                     if self._pending_clearoutput:
-                        print("\r", end="")
+                        self.vim_display_manager.clear_stdout_buffer()
                         self._pending_clearoutput = False
                     self.execution_count = int(sub_msg["content"]["execution_count"])
                     if not self.from_here(sub_msg):
-                        sys.stdout.write(self.other_output_prefix)
+                        self.vim_display_manager.open_window(kind="stdout")
+                        self.vim_display_manager.handle_stdout(
+                            self.other_output_prefix)
+                        self.vim_display_manager.finish_stdout()
                     format_dict = sub_msg["content"]["data"]
                     self.handle_rich_data(format_dict)
 
@@ -677,41 +687,50 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
 
                     # prompt_toolkit writes the prompt at a slightly lower level,
                     # so flush streams first to ensure correct ordering.
-                    sys.stdout.flush()
-                    sys.stderr.flush()
+                    # sys.stdout.flush()
+                    # sys.stderr.flush()
                     self.print_out_prompt()
                     text_repr = format_dict['text/plain']
+                    self.vim_display_manager.open_window(kind="stdout")
                     if '\n' in text_repr:
                         # For multi-line results, start a new line after prompt
-                        print()
-                    print(text_repr)
+                        self.vim_display_manager.handle_stdout()
+                    self.vim_display_manager.handle_stdout(text_repr)
+                    self.vim_display_manager.finish_stdout()
 
                 elif msg_type == 'display_data':
                     data = sub_msg["content"]["data"]
                     handled = self.handle_rich_data(data)
                     if not handled:
+                        self.vim_display_manager.open_window(kind="stdout")
                         if not self.from_here(sub_msg):
-                            sys.stdout.write(self.other_output_prefix)
+                            self.vim_display_manager.handle_stdout(
+                                self.other_output_prefix)
                         # if it was an image, we handled it by now
                         if 'text/plain' in data:
-                            print(data['text/plain'])
+                            self.vim_display_manager.handle_stdout(
+                                data['text/plain'])
+                        self.vim_display_manager.finish_stdout()
 
                 elif msg_type == 'execute_input':
+                    self.vim_display_manager.open_window(kind="stdout")
                     content = sub_msg['content']
                     if not self.from_here(sub_msg):
-                        sys.stdout.write(self.other_output_prefix)
-                    sys.stdout.write('In [{}]: '.format(content['execution_count']))
-                    sys.stdout.write(content['code']+'\n')
+                        self.vim_display_manager.handle_stdout(
+                            self.other_output_prefix)
+                    self.vim_display_manager.handle_stdout(
+                        'In [{}]: '.format(content['execution_count']) +
+                        content['code']+'\n')
 
                 elif msg_type == 'clear_output':
                     if sub_msg["content"]["wait"]:
                         self._pending_clearoutput = True
                     else:
-                        print("\r", end="")
+                        self.vim_display_manager.clear_stdout_buffer()
 
                 elif msg_type == 'error':
                     for frame in sub_msg["content"]["traceback"]:
-                        print(frame, file=sys.stderr)
+                        self.vim_display_manager.clear_stdout_buffer(frame)
 
     _imagemime = {
         'image/png': 'png',
@@ -799,7 +818,9 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
                 # turn EOFError into EOF character
                 raw_data = '\x04'
             except KeyboardInterrupt:
-                sys.stdout.write('\n')
+                self.vim_display_manager.open_window(kind="stdout")
+                self.vim_display_manager.handle_stdout()
+                self.vim_display_manager.finish_stdout()
                 return
             finally:
                 # restore SIGINT handler
