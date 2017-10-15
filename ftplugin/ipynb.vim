@@ -44,10 +44,6 @@ function! ShutDownKernel(silent)
     endif
 endfunction
 
-function! ShutDownKernel()
-    pyx shutdown_silent(vim_jupyter_shell)
-
-endfunction
 
 "map <buffer><localleader>r :call MatRun() <cr><cr>
 "map <buffer><localleader>c :call MatRunCell()  <cr><cr>
