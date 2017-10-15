@@ -5,7 +5,6 @@ if !has('pythonx')
     finish
 end
 
-echo "Hello World!"
 
-pyxfile "/home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimipynbformmater.py"
+pyxfile /home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimipynbformmater.py
 
