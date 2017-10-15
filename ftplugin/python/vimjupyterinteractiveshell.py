@@ -3,12 +3,10 @@ from __future__ import print_function
 
 import base64
 import errno
-from getpass import getpass
 from io import BytesIO
 import os
 import signal
 import subprocess
-import sys
 import time
 from warnings import warn
 
@@ -19,45 +17,29 @@ except ImportError:
 
 from zmq import ZMQError
 from IPython.core import page
-from IPython.utils.py3compat import cast_unicode_py2, input
 from ipython_genutils.tempdir import NamedFileInTemporaryDirectory
 from traitlets import (Bool, Integer, Float, Unicode, List, Dict, Enum,
                        Instance, Any)
 from traitlets.config import SingletonConfigurable
 
-from jupyter_console.completer import ZMQCompleter
 from jupyter_console.zmqhistory import ZMQHistoryManager
 from jupyter_console.ptshell import get_pygments_lexer, JupyterPTCompleter, ask_yes_no
 
 # from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.document import Document
-from prompt_toolkit.enums import DEFAULT_BUFFER, EditingMode
 from prompt_toolkit.filters import HasFocus, HasSelection, ViInsertMode, EmacsInsertMode
-from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.shortcuts import create_prompt_application, create_eventloop, create_output
-from prompt_toolkit.interface import CommandLineInterface
-from prompt_toolkit.key_binding.manager import KeyBindingManager
 # from prompt_toolkit.key_binding.vi_state import InputMode
 # from prompt_toolkit.key_binding.bindings.vi import ViStateFilter
-from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.lexers import PygmentsLexer
-from prompt_toolkit.styles import PygmentsStyle
-
-from pygments.styles import get_style_by_name
-from pygments.token import Token
-
 
 from . import __version__
 from .vimjupyterdisplaymanager import VimJupterDisplayManager
 
 
-class VimJupyterInteractiveShell(SingletonConfigurable):
+class VimJupyterShell(SingletonConfigurable):
     """ Modified from ZMQTerminalInteractiveShell, rewrite handler functions for
         handling data inside the Vim
     """
     readline_use = False
-
-    pt_cli = None
 
     _executing = False
     _execution_state = Unicode('')
@@ -212,54 +194,20 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
     def __init__(self, **kwargs):
         # This is where traits with a config_key argument are updated
         # from the values on config.
-        super(VimJupyterInteractiveShell, self).__init__(**kwargs)
+        super(VimJupyterShell, self).__init__(**kwargs)
         self.configurables = [self]
 
         self.init_history()
-        self.init_completer()
         self.init_io()
 
         self.init_kernel_info()
-        self.init_prompt_toolkit_cli()
         self.keep_running = True
         self.execution_count = 1
-
-    def init_completer(self):
-        """Initialize the completion machinery.
-
-        This creates completion machinery that can be used by client code,
-        either interactively in-process (typically triggered by the readline
-        library), programmatically (such as in test suites) or out-of-process
-        (typically over the network by remote frontends).
-        """
-        self.Completer = ZMQCompleter(self, self.client, config=self.config)
 
     def init_history(self):
         """Sets up the command history. """
         self.history_manager = ZMQHistoryManager(client=self.client)
         self.configurables.append(self.history_manager)
-
-    def get_prompt_tokens(self, cli):
-        return [
-            (Token.Prompt, 'In ['),
-            (Token.PromptNum, str(self.execution_count)),
-            (Token.Prompt, ']: '),
-        ]
-
-    def get_continuation_tokens(self, cli, width):
-        return [
-            (Token.Prompt, (' ' * (width - 2)) + ': '),
-        ]
-
-    def get_out_prompt_tokens(self):
-        return [
-            (Token.OutPrompt, 'Out['),
-            (Token.OutPromptNum, str(self.execution_count)),
-            (Token.OutPrompt, ']: ')
-        ]
-
-    def print_out_prompt(self):
-        self.pt_cli.print_tokens(self.get_out_prompt_tokens())
 
     kernel_info = {}
 
@@ -286,201 +234,12 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
                     kernel_banner=self.kernel_info.get('banner', '')
                                 ))
 
-    def init_prompt_toolkit_cli(self):
-        if self.simple_prompt or ('JUPYTER_CONSOLE_TEST' in os.environ):
-            # Simple restricted interface for tests so we can find prompts with
-            # pexpect. Multi-line input not supported.
-            def prompt():
-                return self.vim_display_manager.handle_stdin(
-                    'In [{}]: '.format(self.execution_count))
-            self.prompt_for_code = prompt
-            self.print_out_prompt = lambda: \
-                self.vim_display_manager.handle_prompt(
-                    'Out[%d]: ' % self.execution_count)
-            return
-
-        kbmanager = KeyBindingManager.for_prompt()
-        insert_mode = ViInsertMode() | EmacsInsertMode()
-        # Ctrl+J == Enter, seemingly
-
-        @kbmanager.registry.add_binding(
-                            Keys.ControlJ, filter=(
-                                HasFocus(DEFAULT_BUFFER)
-                                & ~HasSelection()
-                                & insert_mode
-                                   )
-                                )
-        def _(event):
-            b = event.current_buffer
-            d = b.document
-            if not (d.on_last_line or d.cursor_position_row >= d.line_count
-                    - d.empty_line_count_at_the_end()):
-                b.newline()
-                return
-
-            # Pressing enter flushes any pending display. This also ensures
-            # the displayed execution_count is correct.
-            self.handle_iopub()
-
-            more, indent = self.check_complete(d.text)
-
-            if (not more) and b.accept_action.is_returnable:
-                b.accept_action.validate_and_handle(event.cli, b)
-            else:
-                b.insert_text('\n' + indent)
-
-        @kbmanager.registry.add_binding(Keys.ControlC, filter=HasFocus(DEFAULT_BUFFER))
-        def _(event):
-            event.current_buffer.reset()
-
-        @kbmanager.registry.add_binding(Keys.ControlBackslash, filter=HasFocus(DEFAULT_BUFFER))
-        def _(event):
-            raise EOFError
-
-        # Pre-populate history from IPython's history database
-        history = InMemoryHistory()
-        last_cell = u""
-        for _, _, cell in self.history_manager.get_tail(self.history_load_length,
-                                                        include_latest=True):
-            # Ignore blank lines and consecutive duplicates
-            cell = cast_unicode_py2(cell.rstrip())
-            if cell and (cell != last_cell):
-                history.append(cell)
-
-        style_overrides = {
-            Token.Prompt: '#009900',
-            Token.PromptNum: '#00ff00 bold',
-            Token.OutPrompt: '#ff2200',
-            Token.OutPromptNum: '#ff0000 bold',
-        }
-        if self.highlighting_style:
-            style_cls = get_style_by_name(self.highlighting_style)
-        else:
-            style_cls = get_style_by_name('default')
-            # The default theme needs to be visible on both a dark background
-            # and a light background, because we can't tell what the terminal
-            # looks like. These tweaks to the default theme help with that.
-            style_overrides.update({
-                Token.Number: '#007700',
-                Token.Operator: 'noinherit',
-                Token.String: '#BB6622',
-                Token.Name.Function: '#2080D0',
-                Token.Name.Class: 'bold #2080D0',
-                Token.Name.Namespace: 'bold #2080D0',
-            })
-        style_overrides.update(self.highlighting_style_overrides)
-        style = PygmentsStyle.from_defaults(pygments_style_cls=style_cls,
-                                            style_dict=style_overrides)
-
-        editing_mode = getattr(EditingMode, self.editing_mode.upper())
-        langinfo = self.kernel_info.get('language_info', {})
-        lexer = langinfo.get('pygments_lexer', langinfo.get('name', 'text'))
-        app = create_prompt_application(
-                    multiline=True,
-                    editing_mode=editing_mode,
-                    lexer=PygmentsLexer(get_pygments_lexer(lexer)),
-                    get_prompt_tokens=self.get_prompt_tokens,
-                    get_continuation_tokens=self.get_continuation_tokens,
-                    key_bindings_registry=kbmanager.registry,
-                    history=history,
-                    completer=JupyterPTCompleter(self.Completer),
-                    enable_history_search=True,
-                    style=style,
-        )
-
-        self._eventloop = create_eventloop()
-        self.pt_cli = CommandLineInterface(
-                            app, eventloop=self._eventloop,
-                            output=create_output(true_color=self.true_color),
-        )
-
-    def prompt_for_code(self):
-        document = self.pt_cli.run(pre_run=self.pre_prompt,
-                                   reset_current_buffer=True)
-        return document.text
-
-    def init_io(self):
-        if sys.platform not in {'win32', 'cli'}:
-            return
-
-        import colorama
-        colorama.init()
-
-    def check_complete(self, code):
-        if self.use_kernel_is_complete:
-            msg_id = self.client.is_complete(code)
-            try:
-                return self.handle_is_complete_reply(
-                    msg_id, timeout=self.kernel_is_complete_timeout)
-            except SyntaxError:
-                return False, ""
-        else:
-            lines = code.splitlines()
-            if len(lines):
-                more = (lines[-1] != "")
-                return more, ""
-            else:
-                return False, ""
 
     def ask_exit(self):
         self.keep_running = False
 
     # This is set from payloads in handle_execute_reply
     next_input = None
-
-    def pre_prompt(self):
-        if self.next_input:
-            # We can't set the buffer here, because it will be reset just after
-            # this. Adding a callable to pre_run_callables does what we need
-            # after the buffer is reset.
-            s = cast_unicode_py2(self.next_input)
-
-            def set_doc():
-                self.pt_cli.application.buffer.document = Document(s)
-            if hasattr(self.pt_cli, 'pre_run_callables'):
-                self.pt_cli.pre_run_callables.append(set_doc)
-            else:
-                # Older version of prompt_toolkit; it's OK to set the document
-                # directly here.
-                set_doc()
-            self.next_input = None
-
-    def interact(self, display_banner=None):
-        while self.keep_running:
-            print('\n', end='')
-
-            try:
-                code = self.prompt_for_code()
-            except EOFError:
-                if (not self.confirm_exit) or \
-                        ask_yes_no('Do you really want to exit ([y]/n)?', 'y', 'n'):
-                    self.ask_exit()
-
-            else:
-                if code:
-                    self.run_cell(code, store_history=True)
-
-    def mainloop(self):
-        self.keepkernel = not self.own_kernel
-        # An extra layer of protection in case someone mashing Ctrl-C breaks
-        # out of our internal code.
-        while True:
-            try:
-                self.interact()
-                break
-            except KeyboardInterrupt:
-                print("\nKeyboardInterrupt escaped interact()\n")
-
-        if self._eventloop:
-            self._eventloop.close()
-        if self.keepkernel and not self.own_kernel:
-            print('keeping kernel alive')
-        elif self.keepkernel and self.own_kernel:
-            print("owning kernel, cannot keep it alive")
-            self.client.shutdown()
-        else:
-            print("Shutting down kernel")
-            self.client.shutdown()
 
     def run_cell(self, cell, store_history=True):
         """Run a complete IPython cell.
@@ -640,6 +399,10 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
 
            It only displays output that is caused by this session.
         """
+        self.vim_display_manager.open_window(kind="stdout")
+        output_handler = self.vim_display_manager.handle_stdout
+        clear_buffer = self.vim_display_manager.clear_stdout_buffer
+
         while self.client.iopub_channel.msg_ready():
             sub_msg = self.client.iopub_channel.get_msg()
             msg_type = sub_msg['header']['msg_type']
@@ -653,32 +416,28 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
                 if msg_type == 'status':
                     self._execution_state = sub_msg["content"]["execution_state"]
                 elif msg_type == 'stream':
-                    self.vim_display_manager.open_window(kind="stdout")
                     if sub_msg["content"]["name"] == "stdout":
                         if self._pending_clearoutput:
-                            self.vim_display_manager.clear_stdout_buffer()
+                            clear_buffer()
                             self._pending_clearoutput = False
-                        self.vim_display_manager.handle_stdout(
+                        output_handler(
                             sub_msg["content"]["text"])
-                        self.vim_display_manager.finish_stdout()
                     elif sub_msg["content"]["name"] == "stderr":
                         if self._pending_clearoutput:
-                            self.vim_display_manager.clear_stdout_buffer()
+                            clear_buffer()
                             self._pending_clearoutput = False
-                        self.vim_display_manager.handle_stdout(
+                        output_handler(
                             sub_msg["content"]["text"])
-                        self.vim_display_manager.finish_stdout()
 
                 elif msg_type == 'execute_result':
                     if self._pending_clearoutput:
-                        self.vim_display_manager.clear_stdout_buffer()
+                        clear_buffer()
                         self._pending_clearoutput = False
                     self.execution_count = int(sub_msg["content"]["execution_count"])
                     if not self.from_here(sub_msg):
                         self.vim_display_manager.open_window(kind="stdout")
-                        self.vim_display_manager.handle_stdout(
+                        output_handler(
                             self.other_output_prefix)
-                        self.vim_display_manager.finish_stdout()
                     format_dict = sub_msg["content"]["data"]
                     self.handle_rich_data(format_dict)
 
@@ -691,34 +450,29 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
                     # sys.stderr.flush()
                     self.print_out_prompt()
                     text_repr = format_dict['text/plain']
-                    self.vim_display_manager.open_window(kind="stdout")
                     if '\n' in text_repr:
                         # For multi-line results, start a new line after prompt
-                        self.vim_display_manager.handle_stdout()
-                    self.vim_display_manager.handle_stdout(text_repr)
-                    self.vim_display_manager.finish_stdout()
+                        output_handler()
+                    output_handler(text_repr)
 
                 elif msg_type == 'display_data':
                     data = sub_msg["content"]["data"]
                     handled = self.handle_rich_data(data)
                     if not handled:
-                        self.vim_display_manager.open_window(kind="stdout")
                         if not self.from_here(sub_msg):
-                            self.vim_display_manager.handle_stdout(
+                            output_handler(
                                 self.other_output_prefix)
                         # if it was an image, we handled it by now
                         if 'text/plain' in data:
-                            self.vim_display_manager.handle_stdout(
+                            output_handler(
                                 data['text/plain'])
-                        self.vim_display_manager.finish_stdout()
 
                 elif msg_type == 'execute_input':
-                    self.vim_display_manager.open_window(kind="stdout")
                     content = sub_msg['content']
                     if not self.from_here(sub_msg):
-                        self.vim_display_manager.handle_stdout(
+                        output_handler(
                             self.other_output_prefix)
-                    self.vim_display_manager.handle_stdout(
+                    output_handler(
                         'In [{}]: '.format(content['execution_count']) +
                         content['code']+'\n')
 
@@ -726,11 +480,14 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
                     if sub_msg["content"]["wait"]:
                         self._pending_clearoutput = True
                     else:
-                        self.vim_display_manager.clear_stdout_buffer()
+                        clear_buffer()
 
                 elif msg_type == 'error':
                     for frame in sub_msg["content"]["traceback"]:
-                        self.vim_display_manager.clear_stdout_buffer(frame)
+                        output_handler(frame)
+        if kind == "stdout":
+            self.vim_display_manager.finish_stdout()
+
 
     _imagemime = {
         'image/png': 'png',
@@ -811,19 +568,22 @@ class VimJupyterInteractiveShell(SingletonConfigurable):
                 raise KeyboardInterrupt
             signal.signal(signal.SIGINT, double_int)
             content = req['content']
-            read = getpass if content.get('password', False) else input
+            self.vim_display_manager.open_window(kind="stdin")
+            if content.get('password', False):
+                read = self.vim_display_manager.handle_password
+            else:
+                read = self.vim_display_manager.handle_stdin
             try:
                 raw_data = read(content["prompt"])
             except EOFError:
                 # turn EOFError into EOF character
                 raw_data = '\x04'
             except KeyboardInterrupt:
-                self.vim_display_manager.open_window(kind="stdout")
-                self.vim_display_manager.handle_stdout()
-                self.vim_display_manager.finish_stdout()
+                self.vim_display_manager.handle_input("KeyboradInterrupt!")
                 return
             finally:
                 # restore SIGINT handler
+                self.vim_display_manager.close_stdin_window()
                 signal.signal(signal.SIGINT, real_handler)
             # only send stdin reply if there *was not* another request
             # or execution finished while we were reading.

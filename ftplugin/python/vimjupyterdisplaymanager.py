@@ -11,11 +11,6 @@ class VimJupterDisplayManager():
     stdout_ratio = 3
     stdout_dir = "above"
 
-    interactive_buffer_name = "Vim-Jupter-Interactive"
-    interactive_buffer = None
-    interactive_ratio = 3
-    interactive_dir = "below"
-
     stdin_buffer_name = "Vim-Jupter-Input"
     stdin_buffer = None
 
@@ -44,11 +39,6 @@ class VimJupterDisplayManager():
             vim.command(cmd)
             self.stdin_buffer = vim.current.buffer
             self.stdin_buffer[:] = None
-        elif kind == "interactive":
-            cmd = self.open_interactive_window()
-            vim.command(cmd)
-            self.interactive_buffer = vim.current.buffer
-            self.interactive_buffer[:] = None
 
     def open_stdout_window(self, ratio=None, wdir=None):
         if ratio is None:
@@ -56,10 +46,6 @@ class VimJupterDisplayManager():
 
         if wdir is None:
             wdir = self.stdout_dir
-
-        interactive_id = self.bufwinid(self.interactive_buffer_name)
-        if interactive_id != -1:
-            self.close_interactive_window()
 
         height = vim.current.window.height/ratio
         width = vim.current.window.width/ratio
@@ -115,48 +101,11 @@ class VimJupterDisplayManager():
         vim.command("set tw=0")
         self.stdin_buffer.append(prompt)
 
+    def handle_password(self, prompt):
+        vim.command("set tw=0")
+        self.stdin_buffer.append(prompt)
 
     def close_stdin_window(self):
-        stdin_id = self.bufwinid(self.stdin_buffer_name)
-        if stdin_id != -1:
-            self.win_gotoid(stdin_id)
-            vim.command("q!")
-
-    def open_interactive_window(self, ratio=None, wdir=None):
-        if ratio is None:
-            ratio = self.interactive_ratio
-
-        if wdir is None:
-            wdir = self.interactive_dir
-
-        height = vim.current.window.height/self.interactive_ratio
-        width = vim.current.window.width/self.interactive_ratio
-
-        if wdir == "above":
-            cmd = "aboveleft " + str(height) + "split "
-        elif wdir == "below":
-            cmd = "belowright " + str(height) + "split "
-        elif wdir == "left":
-            cmd = "leftabove " + str(width) + "vsplit "
-        elif wdir == "right":
-            cmd = "rightbelow " + str(width) + "vsplit "
-
-        interactive_id = self.bufwinid(self.interactive_buffer_name)
-
-        if interactive_id != -1:
-            self.win_gotoid(interactive_id)
-            cmd = "set noreadonly modifiable"
-        else:
-            cmd += "+set\ noreadonly\ modifiable" + \
-                self.interactive_buffer_name
-        return cmd
-
-    def handle_interactive(self, msg):
-        output = self.prompt + msg
-
-        self.prompt = ""
-
-    def close_interactive_window(self):
         stdin_id = self.bufwinid(self.stdin_buffer_name)
         if stdin_id != -1:
             self.win_gotoid(stdin_id)
