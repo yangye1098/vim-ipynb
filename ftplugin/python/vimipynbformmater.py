@@ -64,7 +64,7 @@ class VimIpynbFormmater():
 
         for line in cb:
             if not in_code:
-                matchObj = re.match(r'^#%%\{(.*?)\s', line)
+                matchObj = re.match(r'^#%%\{(.*?)[\s\}]', line)
                 if matchObj:
                     if name is not None:
                         new_cells[name]["source"] = new_cells[name]["source"][:-1]
@@ -85,7 +85,7 @@ class VimIpynbFormmater():
                             one letter")
                     continue
                 else:
-                    matchObj = re.match(r'^```\{(.*?)\s', line)
+                    matchObj = re.match(r'^```\{(.*?)[\s\}]', line)
                     if matchObj:
                         if name is not None:
                             new_cells[name]["source"] = new_cells[name]["source"][:-1]
