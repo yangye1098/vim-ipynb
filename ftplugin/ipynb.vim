@@ -37,7 +37,7 @@ function! IpynbRunLine()
 endfunction
 
 function! ShutDownKernel(silent)
-    if silent == 1
+    if a:silent == 1
         pyx shutdown_silent(vim_jupyter_shell)
     else
         pyx shutdown_verbose(vim_jupyter_shell)
