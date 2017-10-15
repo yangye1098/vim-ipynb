@@ -9,7 +9,6 @@ import os
 import signal
 import subprocess
 import time
-from warnings import warn
 
 try:
     from queue import Empty  # Py 3
@@ -197,7 +196,6 @@ class VimJupyterShell(SingletonConfigurable):
         self.init_io()
 
         self.init_kernel_info()
-        self.keep_running = True
         self.execution_count = 1
 
     def init_history(self):
@@ -232,8 +230,27 @@ class VimJupyterShell(SingletonConfigurable):
         import colorama
         colorama.init()
 
-    def ask_exit(self):
-        self.keep_running = False
+    def ask_restart(self):
+        self.vim_display_manager.open_window(kind="stdout")
+        self.kernel_manager().restart_kernel()
+        self.vim_display_manager.handle_stdout("Kernel restart!")
+        self.vim_display_manager.finish_stdout()
+
+    def ask_shutdown(self):
+        self.vim_display_manager.open_window(kind="stdout")
+        msg_id = self.client().shutdown(restart=False)
+        while self.client.is_alive():
+            try:
+                msg = self.client.shell_channel.get_msg(block=False, timeout=0.05)
+                if msg["parent_header"].get("msg_id", None) == msg_id:
+                    break
+            except Empty:
+                pass
+            else:
+                break
+        self.vim_display_manager.handle_stdout("The kernel has been shut down: "
+                                               + msg["header"]["session"])
+        self.vim_display_manager.finish_stdout()
 
     # This is set from payloads in handle_execute_reply
     next_input = None
@@ -255,6 +272,13 @@ class VimJupyterShell(SingletonConfigurable):
         if (not cell) or cell.isspace():
             # pressing enter flushes any pending display
             self.handle_iopub()
+            self.vim_display_manager.finish_stdout()
+            return
+
+        if self.client.is_alive() is False:
+            self.handle_iopub()
+            self.vim_display_manager.handle_stdout("The kernel is not alive")
+            self.vim_display_manager.finish_stdout()
             return
 
         # flush stale replies, which could have been ignored,
@@ -314,52 +338,11 @@ class VimJupyterShell(SingletonConfigurable):
                         self.next_input = item['text']
                     elif source == 'ask_exit':
                         self.keepkernel = item.get('keepkernel', False)
-                        self.ask_exit()
 
             elif status == 'error':
                 pass
 
             self.execution_count = int(content["execution_count"] + 1)
-
-    def handle_is_complete_reply(self, msg_id, timeout=None):
-        """
-        Wait for a repsonse from the kernel, and return two values:
-            more? - (boolean) should the frontend ask for more input
-            indent - an indent string to prefix the input
-        Overloaded methods may want to examine the comeplete source. Its is
-        in the self._source_lines_buffered list.
-        """
-        # Get the is_complete response:
-        msg = None
-        try:
-            msg = self.client.shell_channel.get_msg(block=True, timeout=timeout)
-        except Empty:
-            warn('The kernel did not respond to an is_complete_request. '
-                 'Setting `use_kernel_is_complete` to False.')
-            self.use_kernel_is_complete = False
-            return False, ""
-        # Handle response:
-        if msg["parent_header"].get("msg_id", None) != msg_id:
-            warn('The kernel did not respond properly to \
-                 an is_complete_request: %s.' % str(msg))
-            return False, ""
-        else:
-            status = msg["content"].get("status", None)
-            indent = msg["content"].get("indent", "")
-        # Return more? and indent string
-        if status == "complete":
-            return False, indent
-        elif status == "incomplete":
-            return True, indent
-        elif status == "invalid":
-            raise SyntaxError()
-        elif status == "unknown":
-            return False, indent
-        else:
-            warn('The kernel sent an invalid is_complete_reply \
-                 status: "%s".' % status)
-
-            return False, indent
 
     include_other_output = Bool(
         False, config=True,
@@ -598,4 +581,3 @@ class VimJupyterShell(SingletonConfigurable):
             if not (self.client.stdin_channel.msg_ready()
                     or self.client.shell_channel.msg_ready()):
                 self.client.input(raw_data)
-

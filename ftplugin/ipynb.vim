@@ -6,19 +6,33 @@ if !has('pythonx')
 end
 
 
-pyxfile /home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimipynbformmater.py
 pyx << EOF
 import sys
 sys.path.append("/home/eric/.vim/bundle/vim-ipynb/ftplugin/python/")
 from vimjupyterapp import VimJupyterApp
 from vimjupytershellwrapper import *
+from vimipynbformmater import VimIpynbFormmater
+formmater =  VimIpynbFormmater()
 vim_jupyter_app = VimJupyterApp()
 vim_jupyter_app.initialize()
 vim_jupyter_shell = vim_jupyter_app.shell
 vim_jupyter_shell.run_cell("print(\"Hello World!\")", store_history=True);
 EOF
 
+"call FromIpynb()
+
+"au BufWritePost *.ipynb call ToIpynb()
+
+function! FromIpynb()
+    pyx formmater.from_ipynb()
+endfunction
+
+function! ToIpynb()
+    pyx to_ipynb()
+endfunction
+
 function! IpynbRunLine()
+    ToIpynb()
     echom "Run Line!"
     pyx run_line(vim_jupyter_app)
 endfunction
