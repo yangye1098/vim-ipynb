@@ -23,13 +23,6 @@ from traitlets import (Bool, Integer, Float, Unicode, List, Dict, Enum,
 from traitlets.config import SingletonConfigurable
 
 from jupyter_console.zmqhistory import ZMQHistoryManager
-from jupyter_console.ptshell import get_pygments_lexer, JupyterPTCompleter, ask_yes_no
-
-# from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.filters import HasFocus, HasSelection, ViInsertMode, EmacsInsertMode
-from prompt_toolkit.shortcuts import create_prompt_application, create_eventloop, create_output
-# from prompt_toolkit.key_binding.vi_state import InputMode
-# from prompt_toolkit.key_binding.bindings.vi import ViStateFilter
 
 from . import __version__
 from .vimjupyterdisplaymanager import VimJupterDisplayManager
@@ -222,18 +215,12 @@ class VimJupyterShell(SingletonConfigurable):
                 reply = self.client.get_shell_msg(timeout=1)
             except Empty:
                 if (time.time() - tic) > timeout:
-                    raise RuntimeError("Kernel didn't respond to kernel_info_request")
+                    raise RuntimeError(
+                        "Kernel didn't respond to kernel_info_request")
             else:
                 if reply['parent_header'].get('msg_id') == msg_id:
                     self.kernel_info = reply['content']
                     return
-
-    def show_banner(self):
-        print(self.banner.format(
-                    version=__version__,
-                    kernel_banner=self.kernel_info.get('banner', '')
-                                ))
-
 
     def ask_exit(self):
         self.keep_running = False
@@ -258,7 +245,8 @@ class VimJupyterShell(SingletonConfigurable):
             self.handle_iopub()
             return
 
-        # flush stale replies, which could have been ignored, due to missed heartbeats
+        # flush stale replies, which could have been ignored,
+        # due to missed heartbeats
         while self.client.shell_channel.msg_ready():
             self.client.shell_channel.get_msg()
         # execute takes 'hidden', which is the inverse of store_hist
@@ -340,7 +328,8 @@ class VimJupyterShell(SingletonConfigurable):
             return False, ""
         # Handle response:
         if msg["parent_header"].get("msg_id", None) != msg_id:
-            warn('The kernel did not respond properly to an is_complete_request: %s.' % str(msg))
+            warn('The kernel did not respond properly to \
+                 an is_complete_request: %s.' % str(msg))
             return False, ""
         else:
             status = msg["content"].get("status", None)
@@ -355,7 +344,9 @@ class VimJupyterShell(SingletonConfigurable):
         elif status == "unknown":
             return False, indent
         else:
-            warn('The kernel sent an invalid is_complete_reply status: "%s".' % status)
+            warn('The kernel sent an invalid is_complete_reply \
+                 status: "%s".' % status)
+
             return False, indent
 
     include_other_output = Bool(
@@ -376,7 +367,8 @@ class VimJupyterShell(SingletonConfigurable):
 
     def from_here(self, msg):
         """Return whether a message is from this session"""
-        return msg['parent_header'].get("session", self.session_id) == self.session_id
+        return msg['parent_header'].get(
+            "session", self.session_id) == self.session_id
 
     def include_output(self, msg):
         """Return whether we should include a given output message"""
@@ -410,7 +402,8 @@ class VimJupyterShell(SingletonConfigurable):
 
             # Update execution_count in case it changed in another session
             if msg_type == "execute_input":
-                self.execution_count = int(sub_msg["content"]["execution_count"]) + 1
+                self.execution_count = int(
+                    sub_msg["content"]["execution_count"]) + 1
 
             if self.include_output(sub_msg):
                 if msg_type == 'status':
@@ -433,7 +426,8 @@ class VimJupyterShell(SingletonConfigurable):
                     if self._pending_clearoutput:
                         clear_buffer()
                         self._pending_clearoutput = False
-                    self.execution_count = int(sub_msg["content"]["execution_count"])
+                    self.execution_count = int(
+                        sub_msg["content"]["execution_count"])
                     if not self.from_here(sub_msg):
                         self.vim_display_manager.open_window(kind="stdout")
                         output_handler(
@@ -485,9 +479,7 @@ class VimJupyterShell(SingletonConfigurable):
                 elif msg_type == 'error':
                     for frame in sub_msg["content"]["traceback"]:
                         output_handler(frame)
-        if kind == "stdout":
-            self.vim_display_manager.finish_stdout()
-
+        self.vim_display_manager.finish_stdout()
 
     _imagemime = {
         'image/png': 'png',

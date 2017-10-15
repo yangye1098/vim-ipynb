@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import logging
 import signal
 import sys
 
@@ -9,15 +8,14 @@ from traitlets import (
 )
 from traitlets.config import catch_config_error, boolean_flag
 
-from jupyter_core.application import JupyterApp, base_aliases, base_flags, NoStart
+from jupyter_core.application import JupyterApp, base_aliases, base_flags
 from jupyter_client.consoleapp import (
         JupyterConsoleApp, app_aliases, app_flags,
     )
 
-from jupyter_console.ptshell import ZMQTerminalInteractiveShell
 from jupyter_console import __version__
 
-from .vimjupyterinteractiveshell import VimJupyterInteractiveShell
+from .vimjupytershell import VimJupyterShell
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -83,7 +81,7 @@ class VimJupyterApp(JupyterApp, JupyterConsoleApp):
     """
     examples = _examples
 
-    classes = [VimJupyterApp] + JupyterConsoleApp.classes
+    classes = [VimJupyterShell] + JupyterConsoleApp.classes
     flags = Dict(flags)
     aliases = Dict(aliases)
     frontend_aliases = Any(frontend_aliases)
@@ -101,7 +99,7 @@ class VimJupyterApp(JupyterApp, JupyterConsoleApp):
         JupyterConsoleApp.initialize(self)
         # relay sigint to kernel
         signal.signal(signal.SIGINT, self.handle_sigint)
-        self.shell = VimJupyterInteractiveShell.instance(
+        self.shell = VimJupyterShell.instance(
             parent=self,
             manager=self.kernel_manager,
             client=self.kernel_client,
@@ -132,21 +130,11 @@ class VimJupyterApp(JupyterApp, JupyterConsoleApp):
             return
         # create the shell
         self.init_shell()
-        # and draw the banner
-        self.init_banner()
-
-    def init_banner(self):
-        """optionally display the banner"""
-        self.shell.show_banner()
-        # Make sure there is a space below the banner.
-        if self.log_level <= logging.INFO:
-            print()
 
     def start(self):
         # JupyterApp.start dispatches on NoStart
         super(VimJupyterApp, self).start()
         self.log.debug("Starting the jupyter console mainloop...")
-        self.shell.mainloop()
 
 
 main = launch_new_instance = VimJupyterApp.launch_instance
