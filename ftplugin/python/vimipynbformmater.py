@@ -75,7 +75,7 @@ class VimIpynbFormmater():
                             new_cells[name] = self.vim_ipynb_nodes[cb_name][name]
                             new_cells[name]["source"] = ""
                         else:
-                            new_cells[name] = nbformat.v4.new_markedown_cell()
+                            new_cells[name] = nbformat.v4.new_markdown_cell()
                             new_cells[name]["source"] = ""
 
                     else:
