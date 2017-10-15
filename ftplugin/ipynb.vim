@@ -5,5 +5,7 @@ if !has('pythonx')
     finish
 end
 
-au BufRead,BufNew *.ipynb exec "pyxfile /home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimipynbformmater.py"
+echo "Hello World!"
+
+pyxfile "/home/eric/.vim/bundle/vim-ipynb/ftplugin/python/vimipynbformmater.py"
 
