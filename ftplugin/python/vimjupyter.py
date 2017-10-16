@@ -301,6 +301,7 @@ class VimJupyter(ConnectionFileMixin):
         #     return
         self.existing = existing
         self.runtime_dir = jupyter_runtime_dir()
+        self.connection_file = self._new_connection_file()
         if not os.path.isdir(self.runtime_dir):
             os.mkdir(self.runtime_dir)
 

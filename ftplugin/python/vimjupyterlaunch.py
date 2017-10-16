@@ -29,3 +29,18 @@ def launch(name, existing=""):
     vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
     vim_jupyter_wrapper[name] = VimJupyterShellWrapper(vim_jupyter_shell[name])
     vim_jupyter_formatter[name] = VimIpynbFormatter(vim_jupyter_shell[name])
+
+
+def clean_up(name):
+    vim_jupyter_wrapper[name].shutdown_silent()
+    del vim_jupyter_wrapper[name]
+    del vim_jupyter_formatter[name]
+    del vim_jupyter_shell[name]
+    del vim_jupyter_client[name]
+    del vim_jupyter_kernel_manager[name]
+    del vim_jupyter[name]
+
+
+def clean_all():
+    for name in vim_jupyter:
+        clean_up(name)

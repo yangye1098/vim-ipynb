@@ -18,9 +18,17 @@ EOF
 
 
 au BufWritePost *.ipynb pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
-au VimLeave *.ipynb pythonx vim_jupyter_wrapper[vim.current.buffer.name].shutdown_silent()
+au Quitpre *.ipynb pythonx clean_up(vim.current.buffer.name)
+au VimLeave * pythonx clean_all()
 
 
+
+function! ShutDownAllKernels()
+pythonx << EOF
+for buffer_name in vim_jupyter_wrapper:
+    vim_jupyter_wrapper[buffer_name].shutdown_silent()
+EOF
+endfunction
 
 
 command! -nargs=0 FromIpynb               :pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
