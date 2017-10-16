@@ -17,7 +17,7 @@ EOF
 
 
 au BufWritePost *.ipynb pythonx formatter.to_ipynb()
-au Quitpre * pythonx wrapper.shutdown_silent(vim_jupyter_shell)
+au Quitpre * pythonx wrapper.shutdown_silent()
 
 
 

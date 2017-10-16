@@ -64,7 +64,7 @@ class VimIpynbFormatter():
 
     def update_from_buffer(self, cb, cb_name):
         self.vim_ipynb_nbs[cb_name].metadata["language_info"] \
-            = self.kernel_info["language_info"]
+            = self.shell.kernel_info["language_info"]
         self.vim_ipynb_nbs[cb_name].nbformat = current_nbformat
         self.vim_ipynb_nbs[cb_name].nbformat_minor = current_nbformat_minor
         new_cells = self.cells_from_buffer(
