@@ -24,7 +24,7 @@ au VimLeave *.ipynb pythonx vim_jupyter_wrapper[vim.current.buffer.name].shutdow
 
 
 command! -nargs=0 FromIpynb               :pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
-command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name]formatter.to_ipynb()
+command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 command! -nargs=0 StartKernel             :pythonx launch(vim.current.buffer.name)
 command! -nargs=1 ConnectToKernel         :pythonx launch(vim.current.buffer.name, existing="<args>")
 command! -nargs=0 ConnectToPreviousKernel :pythonx launch(vim.current.buffer.name, existing="*.json")
