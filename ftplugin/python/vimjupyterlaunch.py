@@ -11,6 +11,7 @@ vim_jupyter_shell = dict()
 vim_jupyter_client = dict()
 vim_jupyter_formatter = dict()
 vim_jupyter_wrapper = dict()
+vim_jupyter_kernel_manager = dict()
 
 
 def launch(name, existing=""):

@@ -12,7 +12,7 @@ import sys
 import vim
 vim_jupyter_path = "/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
-from vimjupyterlaunch import launch
+from vimjupyterlaunch import *
 launch(vim.current.buffer.name)
 EOF
 
