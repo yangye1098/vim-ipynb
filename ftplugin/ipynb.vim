@@ -19,27 +19,41 @@ EOF
 au BufWritePost *.ipynb pythonx formmater.to_ipynb()
 au Quitpre * pythonx shutdown_silent(vim_jupyter_shell)
 
+let g:ipynb_convert_on_start = 1
+
 if g:ipynb_convert_on_start == 1
     pythonx formmater.from_ipynb()
 endif
 
+command! -nargs=0 FromIpynb              :pythonx formmater.from_ipynb()
+command! -nargs=0 ToIpynb                :pythonx formmater.to_ipynb()
+command! -nargs=0 StartKernel            :pythonx launch()
+command! -nargs=1 ConnectToKernel        :pythonx launch(existing="<args>")
+command! -nargs=0 ConnectToPreviousKernel:pythonx launch(existing="*.json")
+command! -nargs=0 KernelShutdown         :pythonx wrapper.shutdown_verbose()
+command! -nargs=0 KernelRestart          :pythonx wrapper.restart()
+command! -nargs=1 RunCell                :pythonx wrapper.run_cell(arg="<args>")
+command! -nargs=1 PrintVariable          :pythonx wrapper.print_variable(arg="<args>")
+command! -nargs=1 GetDoc                 :pythonx wrapper.print_variable(arg="<args>")
 
-noremap  <Plug>(FromIpynb)              :pythonx formmater.from_ipynb()<CR>
-noremap  <Plug>(ToIpynb)                :pythonx formmater.to_ipynb()<CR>
+
+
+noremap  <Plug>(FromIpynb)              :FromIpynb<CR>
+noremap  <Plug>(ToIpynb)                :ToIpynb<CR>
 noremap  <Plug>(ConnectToPreviousKernel):pythonx launch(existing="*.json")<CR>
-noremap  <Plug>(ConnectToKernel)        :pythonx launch(existing=)<CR>
-noremap  <Plug>(StartKernel)            :pythonx launch()<CR>
-noremap  <Plug>(KernelShutdown)         :pythonx shutdown_verbose(vim_jupyter_shell)<CR>
-noremap  <Plug>(KernelRestart)          :pythonx restart(vim_jupyter_shell)<CR>
-noremap  <Plug>(RunCell) ()             :pythonx run_cell(vim_jupyter_shell, )<CR>
-noremap  <Plug>(RunCurrentCell)         :pythonx run_cell_under_cursor(vim_jupyter_shell, down=False)<CR>
-noremap  <Plug>(RunCurrentCellDown)     :pythonx run_cell_under_cursor(vim_jupyter_shell, down=True)<CR>
-noremap  <Plug>(RunLine)                :pythonx run_line(vim_jupyter_shell)<CR>
-noremap  <Plug>(RunAll)                 :pythonx run_all(vim_jupyter_shell)<CR>
-noremap  <Plug>(PrintUnderCursor)       :pythonx print_variable(vim_jupyter_shell, arg="")<CR>
-noremap  <Plug>(PrintVariable)          :pythonx print_variable(vim_jupyter_shell, arg="")<CR>
-noremap  <Plug>(GetDocUnderCursor)      :pythonx get_doc(vim_jupyter_shell, arg="")<CR>
-noremap  <Plug>(GetDoc)                 :pythonx get_doc(vim_jupyter_shell, arg="")<CR>
+noremap  <Plug>(ConnectToKernel)        :ConnectToKernel
+noremap  <Plug>(StartKernel)            :StartKernel<CR>
+noremap  <Plug>(KernelShutdown)         :KernelShutdown<CR>
+noremap  <Plug>(KernelRestart)          :KernelRestart<CR>
+noremap  <Plug>(RunCell)                :RunCell
+noremap  <Plug>(RunCurrentCell)         :pythonx wrapper.run_cell_under_cursor(down=False)<CR>
+noremap  <Plug>(RunCurrentCellDown)     :pythonx wrapper.run_cell_under_cursor(vim_jupyter_shell, down=True)<CR>
+noremap  <Plug>(RunLine)                :pythonx wrapper.run_line()<CR>
+noremap  <Plug>(RunAll)                 :pythonx wrapper.run_all()<CR>
+noremap  <Plug>(PrintUnderCursor)       :pythonx wrapper.print_variable(arg="")<CR>
+noremap  <Plug>(PrintVariable)          :PrintVariable
+noremap  <Plug>(GetDocUnderCursor)      :pythonx get_doc(arg="")<CR>
+noremap  <Plug>(GetDoc)                 :GetDoc
 
 
 
@@ -51,7 +65,6 @@ map <buffer><localleader>p              <Plug>(PrintUnderCursor)
 map <buffer><localleader>pn             <Plug>(PrintVariable)
 map <buffer><localleader>h              <Plug>(GetDocUnderCursor) 
 map <buffer><localleader>hn             <Plug>(GetDoc) 
-map <buffer><localleader>a              :call IpynbRunAboveLines()  <cr>
 map <buffer><localleader>d              <Plug>(RunCurrentCellDown)
 
 
