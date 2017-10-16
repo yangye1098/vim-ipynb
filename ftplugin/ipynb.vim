@@ -18,7 +18,7 @@ EOF
 
 
 au BufWritePost *.ipynb pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
-au Quitpre *.ipynb pythonx clean_up(vim.current.buffer.name)
+au BufUnload *.ipynb pythonx clean_up(vim.current.buffer.name)
 au VimLeave * pythonx clean_all()
 
 

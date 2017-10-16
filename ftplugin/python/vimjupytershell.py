@@ -20,7 +20,7 @@ from IPython.core import page
 from ipython_genutils.tempdir import NamedFileInTemporaryDirectory
 from traitlets import (Bool, Integer, Float, Unicode, List, Dict, Enum,
                        Instance, Any)
-from traitlets.config import SingletonConfigurable
+from traitlets.config import SingletonConfigurable, LoggingConfigurable
 
 from jupyter_console.zmqhistory import ZMQHistoryManager
 
@@ -30,7 +30,7 @@ from _version import __version__
 from vimjupyterdisplaymanager import VimJupterDisplayManager
 
 
-class VimJupyterShell(SingletonConfigurable):
+class VimJupyterShell(LoggingConfigurable):
     """ Modified from ZMQTerminalInteractiveShell, rewrite handler functions for
         handling data inside the Vim
     """

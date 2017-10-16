@@ -32,13 +32,14 @@ def launch(name, existing=""):
 
 
 def clean_up(name):
-    vim_jupyter_wrapper[name].shutdown_silent()
-    del vim_jupyter_wrapper[name]
-    del vim_jupyter_formatter[name]
-    del vim_jupyter_shell[name]
-    del vim_jupyter_client[name]
-    del vim_jupyter_kernel_manager[name]
-    del vim_jupyter[name]
+    if name in vim_jupyter:
+        vim_jupyter_wrapper[name].shutdown_silent()
+        del vim_jupyter_wrapper[name]
+        del vim_jupyter_formatter[name]
+        del vim_jupyter_shell[name]
+        del vim_jupyter_client[name]
+        del vim_jupyter_kernel_manager[name]
+        del vim_jupyter[name]
 
 
 def clean_all():

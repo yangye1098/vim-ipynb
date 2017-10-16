@@ -12,18 +12,18 @@ import sys
 import uuid
 
 
-from traitlets.config.application import boolean_flag
 from ipython_genutils.path import filefind
 from traitlets import (
-    Dict, List, Unicode, CUnicode, CBool
+    List, Unicode
 )
 
 from jupyter_core.paths import jupyter_runtime_dir
-from jupyter_core.application import base_flags, base_aliases
 
 from jupyter_client.blocking import BlockingKernelClient
 from jupyter_client.restarter import KernelRestarter
-from jupyter_client import KernelManager, tunnel_to_kernel, find_connection_file, connect
+from jupyter_client import (
+    KernelManager, tunnel_to_kernel, find_connection_file, connect
+)
 from jupyter_client.kernelspec import NoSuchKernel
 from jupyter_client.session import Session
 
@@ -33,7 +33,7 @@ from jupyter_client.localinterfaces import localhost
 sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
 
 from vimjupytershell import VimJupyterShell
-from _version import  __version__
+from _version import __version__
 
 ConnectionFileMixin = connect.ConnectionFileMixin
 
@@ -81,7 +81,6 @@ class VimJupyter(ConnectionFileMixin):
 
     def _connection_file_default(self):
         return 'kernel-%i.json' % os.getpid()
-
 
     def build_kernel_argv(self, argv=None):
         """build argv to be passed to kernel subprocess
@@ -288,10 +287,9 @@ class VimJupyter(ConnectionFileMixin):
     def init_shell(self):
         # relay sigint to kernel
         signal.signal(signal.SIGINT, self.handle_sigint)
-        self.shell = VimJupyterShell.instance(
-            parent=self,
+        self.shell = VimJupyterShell(
             manager=self.kernel_manager,
-            client=self.kernel_client,
+            client=self.kernel_client
         )
         self.shell.own_kernel = not self.existing
 
@@ -307,14 +305,13 @@ class VimJupyter(ConnectionFileMixin):
 
         if self.existing and self.kernel_manager is not None:
             # first, shutdown the old kernel if own one
-            kernel_manager.shutdown_kernel(restart = False)
+            self.kernel_manager.shutdown_kernel(restart=False)
 
         self.init_connection_file()
         self.init_ssh()
         self.init_kernel_manager()
         self.init_kernel_client()
         self.init_shell()
-
 
     def handle_sigint(self, *args):
         if self.shell._executing:
