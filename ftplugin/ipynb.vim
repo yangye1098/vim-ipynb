@@ -12,24 +12,18 @@ import sys
 vim_jupyter_path = "/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
 from vimjupyterlaunch import launch
-launch()
+wrapper, formatter = launch()
 EOF
 
 
 au BufWritePost *.ipynb pythonx formatter.to_ipynb()
 au Quitpre * pythonx wrapper.shutdown_silent(vim_jupyter_shell)
 
-let g:ipynb_convert_on_start = 1
-
-if g:ipynb_convert_on_start == 1
-    pythonx formatter.from_ipynb()
-endif
-
 command! -nargs=0 FromIpynb              :pythonx formatter.from_ipynb()
 command! -nargs=0 ToIpynb                :pythonx formatter.to_ipynb()
-command! -nargs=0 StartKernel            :pythonx launch()
-command! -nargs=1 ConnectToKernel        :pythonx launch(existing="<args>")
-command! -nargs=0 ConnectToPreviousKernel:pythonx launch(existing="*.json")
+command! -nargs=0 StartKernel            :pythonx wrapper, formatter = launch()
+command! -nargs=1 ConnectToKernel        :pythonx wrapper, formatter = launch(existing="<args>")
+command! -nargs=0 ConnectToPreviousKernel:pythonx wrapper, formatter = launch(existing="*.json")
 command! -nargs=0 KernelShutdown         :pythonx wrapper.shutdown_verbose()
 command! -nargs=0 KernelRestart          :pythonx wrapper.restart()
 command! -nargs=1 RunCell                :pythonx wrapper.run_cell(arg="<args>")
@@ -67,4 +61,10 @@ map <buffer><localleader>h              <Plug>(GetDocUnderCursor)
 map <buffer><localleader>hn             <Plug>(GetDoc) 
 map <buffer><localleader>d              <Plug>(RunCurrentCellDown)
 
+
+let g:ipynb_convert_on_start = 1
+
+if g:ipynb_convert_on_start == 1
+    pythonx wrapper, formatter = launch()
+endif
 
