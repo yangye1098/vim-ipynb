@@ -237,6 +237,11 @@ class VimJupyterShell(SingletonConfigurable):
         self.vim_display_manager.finish_stdout()
 
     def ask_shutdown(self, silent=True):
+        if silent is False:
+            choice = self.vim_display_manager.handle_confirm(
+                "Confirm shutdown kernel? y/n", {'y', 'n'})
+            if choice == 1:
+                return
         msg_id = self.client.shutdown(restart=False)
         while self.client.is_alive():
             try:

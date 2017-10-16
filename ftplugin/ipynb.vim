@@ -6,54 +6,52 @@ if !has('pythonx')
 end
 
 
+
 pyx << EOF
 import sys
-sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
-from vimjupyterapp import VimJupyterApp
-from vimjupytershellwrapper import *
-from vimipynbformmater import VimIpynbFormmater
-vim_jupyter_app = VimJupyterApp()
-vim_jupyter_app.initialize()
-vim_jupyter_shell = vim_jupyter_app.shell
-formmater =  VimIpynbFormmater(vim_jupyter_shell.kernel_info)
-formmater.from_ipynb()
+vim_jupyter_path = "/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/"
+sys.path.append(vim_jupyter_path)
+from vimjupyterlaunch import launch
+launch()
 EOF
 
-au BufWritePost *.ipynb call ToIpynb()
-au Quitpre * call ShutDownKernel(1)
 
-function! FromIpynb()
-    pyx formmater.from_ipynb()
-endfunction
+au BufWritePost *.ipynb pythonx formmater.to_ipynb()
+au Quitpre * pythonx shutdown_silent(vim_jupyter_shell)
 
-function! ToIpynb()
-    pyx formmater.to_ipynb()
-endfunction
-
-function! IpynbRunLine()
-    call ToIpynb()
-    echom "Run Line!"
-    pyx run_line(vim_jupyter_shell)
-endfunction
-
-function! ShutDownKernel(silent)
-    if a:silent == 1
-        pyx shutdown_silent(vim_jupyter_shell)
-    else
-        pyx shutdown_verbose(vim_jupyter_shell)
-    endif
-endfunction
+if g:ipynb_convert_on_start == 1
+    pythonx formmater.from_ipynb()
+endif
 
 
-"map <buffer><localleader>r :call MatRun() <cr><cr>
-"map <buffer><localleader>c :call MatRunCell()  <cr><cr>
-"map <buffer><localleader>g :call MatRunCellAdvanced()  <cr><cr>
-nmap <buffer><space> :call IpynbRunLine()  <cr>
-"map <buffer><f5> :call MatRunExtern() <cr><cr>
-"map <buffer><localleader>p :call MatDisp()  <cr><cr>
-"map <buffer><localleader>h :call MatHelp()  <cr><cr>
-"map <buffer><localleader>s :call MatShowFig()  <cr><cr><cr>
-"map <buffer><localleader>a :call MatRunAboveLines()  <cr><cr>
-"map <buffer><localleader>d :call MatRunDownToNextCell()  <cr><cr>
+noremap  <Plug>(FromIpynb)              :pythonx formmater.from_ipynb()<CR>
+noremap  <Plug>(ToIpynb)                :pythonx formmater.to_ipynb()<CR>
+noremap  <Plug>(ConnectToPreviousKernel):pythonx launch(existing="*.json")<CR>
+noremap  <Plug>(ConnectToKernel)        :pythonx launch(existing=)<CR>
+noremap  <Plug>(StartKernel)            :pythonx launch()<CR>
+noremap  <Plug>(KernelShutdown)         :pythonx shutdown_verbose(vim_jupyter_shell)<CR>
+noremap  <Plug>(KernelRestart)          :pythonx restart(vim_jupyter_shell)<CR>
+noremap  <Plug>(RunCell) ()             :pythonx run_cell(vim_jupyter_shell, )<CR>
+noremap  <Plug>(RunCurrentCell)         :pythonx run_cell_under_cursor(vim_jupyter_shell, down=False)<CR>
+noremap  <Plug>(RunCurrentCellDown)     :pythonx run_cell_under_cursor(vim_jupyter_shell, down=True)<CR>
+noremap  <Plug>(RunLine)                :pythonx run_line(vim_jupyter_shell)<CR>
+noremap  <Plug>(RunAll)                 :pythonx run_all(vim_jupyter_shell)<CR>
+noremap  <Plug>(PrintUnderCursor)       :pythonx print_variable(vim_jupyter_shell, arg="")<CR>
+noremap  <Plug>(PrintVariable)          :pythonx print_variable(vim_jupyter_shell, arg="")<CR>
+noremap  <Plug>(GetDocUnderCursor)      :pythonx get_doc(vim_jupyter_shell, arg="")<CR>
+noremap  <Plug>(GetDoc)                 :pythonx get_doc(vim_jupyter_shell, arg="")<CR>
+
+
+
+map <buffer><localleader>r              <Plug>(RunAll) 
+map <buffer><localleader>cc             <Plug>(RunCurrentCell)
+map <buffer><localleader>cn             <Plug>(RunCell)
+nmap <buffer><space>                    <Plug>(RunLine)
+map <buffer><localleader>p              <Plug>(PrintUnderCursor)
+map <buffer><localleader>pn             <Plug>(PrintVariable)
+map <buffer><localleader>h              <Plug>(GetDocUnderCursor) 
+map <buffer><localleader>hn             <Plug>(GetDoc) 
+map <buffer><localleader>a              :call IpynbRunAboveLines()  <cr>
+map <buffer><localleader>d              <Plug>(RunCurrentCellDown)
 
 

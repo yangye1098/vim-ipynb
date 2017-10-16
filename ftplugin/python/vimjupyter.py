@@ -18,6 +18,7 @@ from traitlets import (
     Dict, List, Unicode, CUnicode, CBool
 )
 
+from jupyter_core.paths import jupyter_runtime_dir
 from jupyter_core.application import base_flags, base_aliases
 
 from jupyter_client.blocking import BlockingKernelClient
@@ -36,60 +37,6 @@ from _version import  __version__
 
 ConnectionFileMixin = connect.ConnectionFileMixin
 
-_examples = """
-jupyter console # start the ZMQ-based console
-jupyter console --existing # connect to an existing ipython session
-"""
-
-
-# -----------------------------------------------------------------------------
-# Aliases and Flags
-# -----------------------------------------------------------------------------
-
-flags = {}
-flags.update(base_flags)
-# the flags that are specific to the frontend
-# these must be scrubbed before being passed to the kernel,
-# or it will raise an error on unrecognized flags
-app_flags = {
-    'existing': ({'JupyterConsoleApp': {'existing': 'kernel*.json'}},
-                 "Connect to an existing kernel. \
-                 If no argument specified, guess most recent"),
-}
-app_flags.update(boolean_flag(
-    'confirm-exit', 'JupyterConsoleApp.confirm_exit',
-    """Set to display confirmation dialog on exit. You can always use 'exit' or
-       'quit', to force a direct exit without any confirmation. This can also
-       be set in the config file by setting
-       `c.JupyterConsoleApp.confirm_exit`.
-    """,
-    """Don't prompt the user when exiting. This will terminate the kernel
-       if it is owned by the frontend, and leave it alive if it is external.
-       This can also be set in the config file by setting
-       `c.JupyterConsoleApp.confirm_exit`.
-    """
-))
-flags.update(app_flags)
-
-aliases = {}
-aliases.update(base_aliases)
-
-# also scrub aliases from the frontend
-app_aliases = dict(
-    ip='JupyterConsoleApp.ip',
-    transport='JupyterConsoleApp.transport',
-    hb='JupyterConsoleApp.hb_port',
-    shell='JupyterConsoleApp.shell_port',
-    iopub='JupyterConsoleApp.iopub_port',
-    stdin='JupyterConsoleApp.stdin_port',
-    existing='JupyterConsoleApp.existing',
-    f='JupyterConsoleApp.connection_file',
-
-    kernel='JupyterConsoleApp.kernel_name',
-
-    ssh='JupyterConsoleApp.sshserver',
-)
-aliases.update(app_aliases)
 
 # -----------------------------------------------------------------------------
 # Classes
@@ -98,7 +45,7 @@ aliases.update(app_aliases)
 classes = [KernelManager, KernelRestarter, Session]
 
 
-class VimJupyterApp(ConnectionFileMixin):
+class VimJupyter(ConnectionFileMixin):
     name = "vim-jupyter"
     version = __version__
     """Start a frontend along with vim to the IPython zmq kernel."""
@@ -119,45 +66,24 @@ class VimJupyterApp(ConnectionFileMixin):
 
     """
 
-    examples = _examples
-
-    classes = [VimJupyterShell] + classes
+    classes = classes
     flags = Dict(flags)
     aliases = Dict(aliases)
     kernel_manager_class = KernelManager
     kernel_client_class = BlockingKernelClient
-    shell_class = VimJupyterShell
 
     kernel_argv = List(Unicode())
 
-    runtime_dir = Unicode()
-
     # connection info:
 
-    sshserver = Unicode(
-        '', config=True,
-        help="""The SSH server to use to connect to the kernel.""")
-    sshkey = Unicode(
-        '', config=True,
-        help="""Path to the ssh key to use for logging in to the ssh server.""")
+    # The SSH server to use to connect to the kernel.
+    sshserver = ''
+    # Path to the ssh key to use for logging in to the ssh server.
+    sshkey = ''
 
     def _connection_file_default(self):
         return 'kernel-%i.json' % os.getpid()
 
-    existing = CUnicode(
-        '', config=True,
-        help="""Connect to an already running kernel""")
-
-    kernel_name = Unicode(
-        'python', config=True,
-        help="""The name of the default kernel to start.""")
-
-    confirm_exit = CBool(
-        True, config=True, help="""
-        Set to display confirmation dialog on exit.
-        You can always use 'exit' or 'quit',
-        to force a direct exit without any confirmation.""",
-    )
 
     def build_kernel_argv(self, argv=None):
         """build argv to be passed to kernel subprocess
@@ -165,6 +91,14 @@ class VimJupyterApp(ConnectionFileMixin):
         Override in subclasses if any args should be passed to the kernel
         """
         self.kernel_argv = self.extra_args
+
+    # existing = filename or partial filename, find file
+    # existing = "*.json" find most recent connection file
+    # existing = "" create new file.
+
+    existing = ""
+    # The name of the default kernel to start.
+    kernel_name = 'python'
 
     def init_connection_file(self):
         """find the connection file, and load the info if found.
@@ -188,7 +122,7 @@ class VimJupyterApp(ConnectionFileMixin):
             except Exception:
                 self.log.critical("Could not find existing \
                                   kernel connection file %s", self.existing)
-                self.exit(1)
+
             self.log.debug("Connecting to existing kernel: %s" % cf)
             self.connection_file = cf
         else:
@@ -223,7 +157,6 @@ class VimJupyterApp(ConnectionFileMixin):
         except Exception:
             self.log.error("Failed to load connection file: %r",
                            self.connection_file, exc_info=True)
-            self.exit(1)
 
     def init_ssh(self):
         """set up ssh tunnels, if needed."""
@@ -371,7 +304,9 @@ class VimJupyterApp(ConnectionFileMixin):
         """
         # if self._dispatching:
         #     return
-        self.runtime_dir = os.getcwd()
+        self.runtime_dir = jupyter_runtime_dir()
+        if not os.path.isdir(self.runtime_dir):
+            os.mkdir(self.runtime_dir)
         self.init_connection_file()
         self.init_ssh()
         self.init_kernel_manager()
@@ -389,3 +324,9 @@ class VimJupyterApp(ConnectionFileMixin):
             # raise the KeyboardInterrupt if we aren't waiting for execution,
             # so that the interact loop advances, and prompt is redrawn, etc.
             raise KeyboardInterrupt
+
+
+if __name__ == "__main__":
+    vim_jupyter = VimJupyter()
+    vim_jupyter.initialize()
+    vim_jupyter_shell = vim_jupyter.shell

@@ -8,15 +8,18 @@ import re
 from collections import OrderedDict
 
 
-class VimIpynbFormmater():
+class VimIpynbFormatter():
     vim_ipynb_nbs = dict()
     vim_ipynb_nodes = dict()
     kernel_info = {}
+    shell = None
+    writefile = vim.Function('writefile')
 
-    def __init__(self, kernel_info):
-        self.kernel_info = kernel_info
+    def __init__(self, shell=None):
+        self.shell = shell
 
     def to_ipynb(self):
+        vim.command("w!")
         cb = vim.current.buffer
         cb_name = vim.current.buffer.name
 
@@ -71,7 +74,9 @@ class VimIpynbFormmater():
 
     def nb_from_buffer(self, cb):
         new_nb = nbformat.v4.new_notebook()
-        new_nb.metadata["language_info"] = self.kernel_info["language_info"]
+        if self.shell is not None:
+            new_nb.metadata["language_info"] = \
+                self.shell.kernel_info["language_info"]
         new_nb.nbformat = current_nbformat
         new_nb.nbformat_minor = current_nbformat_minor
         new_cells = self.cells_from_buffer(cb, old_cells=dict())

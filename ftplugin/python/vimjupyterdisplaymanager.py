@@ -35,11 +35,6 @@ class VimJupterDisplayManager():
             self.stdout_buffer = vim.current.buffer
             self.clear_stdout_buffer()
             self.stdout_last_row = vim.current.window.cursor[0]
-        elif kind == "stdin":
-            cmd = self.open_stdin_window()
-            vim.command(cmd)
-            self.stdin_buffer = vim.current.buffer
-            self.stdin_buffer[:] = None
 
     def open_stdout_window(self, ratio=None, wdir=None):
         if ratio is None:
@@ -89,32 +84,22 @@ class VimJupterDisplayManager():
         vim.command(cmd)
         self.win_gotoid(self.w_origin_ID)
 
-    def open_stdin_window(self):
-        stdin_id = self.bufwinid(self.stdin_buffer_name)
-        if stdin_id != -1:
-            self.win_gotoid(stdin_id)
-            cmd = "set noreadonly modifiable"
-        else:
-            cmd = "belowright 2split +set\ noreadonly\ modifiable " + \
-                self.stdin_buffer_name
-        return cmd
-
     def handle_stdin(self, prompt):
-        vim.command("set tw=0")
-        self.stdin_buffer.append(prompt)
+        f = vim.Function("input")
+        return f(prompt)
 
     def handle_password(self, prompt):
-        vim.command("set tw=0")
-        self.stdin_buffer.append(prompt)
+        f = vim.Function("inputsecret")
+        return f(prompt)
 
-    def close_stdin_window(self):
-        stdin_id = self.bufwinid(self.stdin_buffer_name)
-        if stdin_id != -1:
-            self.win_gotoid(stdin_id)
-            vim.command("q!")
+    def handle_confirm(self, msg, choice_list):
+        f = vim.Function("input")
+        choice = f(msg)
+        while(choice not in choice_list):
+            choice = f("Please choose again, " + msg)
+        return choice_list.index(choice)
+
+
 
     def change_ratio(self, ratio):
         self.ratio = ratio
-
-    def echom(msg):
-        vim.command("echom " + msg)
