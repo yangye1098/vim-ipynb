@@ -21,6 +21,8 @@ def launch(name, existing=""):
     global vim_jupyter_kernel_manager
     global vim_jupyter_wrapper
     global vim_jupyter_formatter
+    if name in vim_jupyter:
+        return
 
     vim_jupyter[name] = VimJupyter()
     vim_jupyter[name].initialize(existing=existing)

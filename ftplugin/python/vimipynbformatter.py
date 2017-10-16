@@ -21,7 +21,7 @@ class VimIpynbFormatter():
         cb = vim.current.buffer
         cb_name = vim.current.buffer.name
 
-        self.update_from_buffer(cb, cb_name)
+        self.update_from_buffer(cb)
 
         with open(cb_name, "w") as cf:
             nbformat.write(self.vim_ipynb_nb, cf)
