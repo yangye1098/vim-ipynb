@@ -17,7 +17,7 @@ EOF
 
 
 au BufWritePost *.ipynb pythonx formatter.to_ipynb()
-au Quitpre * pythonx wrapper.shutdown_silent()
+au VimLeave *.ipynb pythonx wrapper.shutdown_silent()
 
 
 
@@ -54,14 +54,14 @@ noremap  <Plug>(GetDoc)                 :GetDoc<Space>
 
 
 
-map <buffer><localleader>r              <Plug>(RunAll)<CR>
-map <buffer><localleader>cc             <Plug>(RunCurrentCell)<CR>
-map <buffer><localleader>cd             <Plug>(RunCurrentCellDown)<CR>
+map <buffer><localleader>r              <Plug>(RunAll)
+map <buffer><localleader>cc             <Plug>(RunCurrentCell)
+map <buffer><localleader>cd             <Plug>(RunCurrentCellDown)
 map <buffer><localleader>cn             <Plug>(RunCell)
-nmap <buffer><space>                    <Plug>(RunLine)<CR>
-map <buffer><localleader>p              <Plug>(PrintUnderCursor)<CR>
+nmap <buffer><space>                    <Plug>(RunLine)
+map <buffer><localleader>p              <Plug>(PrintUnderCursor)
 map <buffer><localleader>pn             <Plug>(PrintVariable)
-map <buffer><localleader>h              <Plug>(GetDocUnderCursor)<CR>
+map <buffer><localleader>h              <Plug>(GetDocUnderCursor)
 map <buffer><localleader>hn             <Plug>(GetDoc)   
 
 
