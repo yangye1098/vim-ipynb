@@ -102,7 +102,6 @@ class VimJupyterShellWrapper():
             var = str(arg)
 
         code = "?" + var
-        vim.command("echo " + code)
         self.shell.run_cell(code, store_history=True)
 
     def shutdown_silent(self):

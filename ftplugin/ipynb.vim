@@ -54,16 +54,15 @@ noremap  <Plug>(GetDoc)                 :GetDoc<Space>
 
 
 
-map <buffer><localleader>r              <Plug>(RunAll) 
-map <buffer><localleader>cc             <Plug>(RunCurrentCell)
-map <buffer><localleader>cd             <Plug>(RunCurrentCellDown)
+map <buffer><localleader>r              <Plug>(RunAll)<CR>
+map <buffer><localleader>cc             <Plug>(RunCurrentCell)<CR>
+map <buffer><localleader>cd             <Plug>(RunCurrentCellDown)<CR>
 map <buffer><localleader>cn             <Plug>(RunCell)
-nmap <buffer><space>                    <Plug>(RunLine)
-map <buffer><localleader>p              <Plug>(PrintUnderCursor)
+nmap <buffer><space>                    <Plug>(RunLine)<CR>
+map <buffer><localleader>p              <Plug>(PrintUnderCursor)<CR>
 map <buffer><localleader>pn             <Plug>(PrintVariable)
-map <buffer><localleader>h              <Plug>(GetDocUnderCursor) 
-map <buffer><localleader>hn             <Plug>(GetDoc) 
-map <buffer><localleader>d              <Plug>(RunCurrentCellDown)
+map <buffer><localleader>h              <Plug>(GetDocUnderCursor)<CR>
+map <buffer><localleader>hn             <Plug>(GetDoc)   
 
 
 let g:ipynb_convert_on_start = 1
