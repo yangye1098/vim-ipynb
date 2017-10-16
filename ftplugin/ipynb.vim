@@ -19,6 +19,9 @@ EOF
 au BufWritePost *.ipynb pythonx formatter.to_ipynb()
 au Quitpre * pythonx wrapper.shutdown_silent(vim_jupyter_shell)
 
+
+
+
 command! -nargs=0 FromIpynb               :pythonx formatter.from_ipynb()
 command! -nargs=0 ToIpynb                 :pythonx formatter.to_ipynb()
 command! -nargs=0 StartKernel             :pythonx wrapper, formatter = launch()
@@ -65,6 +68,6 @@ map <buffer><localleader>d              <Plug>(RunCurrentCellDown)
 let g:ipynb_convert_on_start = 1
 
 if g:ipynb_convert_on_start == 1
-    pythonx wrapper, formatter = launch()
+    pythonx formatter.from_ipynb()
 endif
 
