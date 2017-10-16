@@ -16,17 +16,17 @@ launch()
 EOF
 
 
-au BufWritePost *.ipynb pythonx formmater.to_ipynb()
-au Quitpre * pythonx shutdown_silent(vim_jupyter_shell)
+au BufWritePost *.ipynb pythonx formatter.to_ipynb()
+au Quitpre * pythonx wrapper.shutdown_silent(vim_jupyter_shell)
 
 let g:ipynb_convert_on_start = 1
 
 if g:ipynb_convert_on_start == 1
-    pythonx formmater.from_ipynb()
+    pythonx formatter.from_ipynb()
 endif
 
-command! -nargs=0 FromIpynb              :pythonx formmater.from_ipynb()
-command! -nargs=0 ToIpynb                :pythonx formmater.to_ipynb()
+command! -nargs=0 FromIpynb              :pythonx formatter.from_ipynb()
+command! -nargs=0 ToIpynb                :pythonx formatter.to_ipynb()
 command! -nargs=0 StartKernel            :pythonx launch()
 command! -nargs=1 ConnectToKernel        :pythonx launch(existing="<args>")
 command! -nargs=0 ConnectToPreviousKernel:pythonx launch(existing="*.json")
