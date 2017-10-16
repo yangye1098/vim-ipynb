@@ -19,7 +19,6 @@ class VimIpynbFormatter():
         self.shell = shell
 
     def to_ipynb(self):
-        vim.command("w!")
         cb = vim.current.buffer
         cb_name = vim.current.buffer.name
 
@@ -69,6 +68,7 @@ class VimIpynbFormatter():
         self.vim_ipynb_nbs[cb_name].nbformat_minor = current_nbformat_minor
         new_cells = self.cells_from_buffer(
             cb, self.vim_ipynb_nodes[cb_name])
+        self.vim_ipynb_nbs[cb_name].cells = []
         for cell in new_cells:
             self.vim_ipynb_nbs[cb_name].cells.append(new_cells[cell])
 

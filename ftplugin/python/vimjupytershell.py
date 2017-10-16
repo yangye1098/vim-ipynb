@@ -375,8 +375,8 @@ class VimJupyterShell(SingletonConfigurable):
         """Return whether we should include a given output message"""
         from_here = self.from_here(msg)
         if msg['msg_type'] == 'execute_input':
-            # only echo inputs not from here
-            return self.include_other_output and not from_here
+            # echo inputs
+            return True
 
         if self.include_other_output:
             return True
@@ -442,11 +442,7 @@ class VimJupyterShell(SingletonConfigurable):
                     if 'text/plain' not in format_dict:
                         continue
 
-                    # prompt_toolkit writes the prompt at a slightly lower level,
-                    # so flush streams first to ensure correct ordering.
-                    # sys.stdout.flush()
-                    # sys.stderr.flush()
-                    self.print_out_prompt()
+                    # output_handler("Out[{}]: ".format(self.execution_count))
                     text_repr = format_dict['text/plain']
                     if '\n' in text_repr:
                         # For multi-line results, start a new line after prompt

@@ -31,31 +31,32 @@ command! -nargs=0 KernelShutdown          :pythonx wrapper.shutdown_verbose()
 command! -nargs=0 KernelRestart           :pythonx wrapper.restart()
 command! -nargs=1 RunCell                 :pythonx wrapper.run_cell(arg="<args>")
 command! -nargs=1 PrintVariable           :pythonx wrapper.print_variable(arg="<args>")
-command! -nargs=1 GetDoc                  :pythonx wrapper.print_variable(arg="<args>")
+command! -nargs=1 GetDoc                  :pythonx wrapper.get_doc(arg="<args>")
 
 
 
 noremap  <Plug>(FromIpynb)              :FromIpynb<CR>
 noremap  <Plug>(ToIpynb)                :ToIpynb<CR>
 noremap  <Plug>(ConnectToPreviousKernel):pythonx launch(existing="*.json")<CR>
-noremap  <Plug>(ConnectToKernel)        :ConnectToKernel
+noremap  <Plug>(ConnectToKernel)        :ConnectToKernel<Space>
 noremap  <Plug>(StartKernel)            :StartKernel<CR>
 noremap  <Plug>(KernelShutdown)         :KernelShutdown<CR>
 noremap  <Plug>(KernelRestart)          :KernelRestart<CR>
-noremap  <Plug>(RunCell)                :RunCell
+noremap  <Plug>(RunCell)                :RunCell<Space>
 noremap  <Plug>(RunCurrentCell)         :pythonx wrapper.run_cell_under_cursor(down=False)<CR>
 noremap  <Plug>(RunCurrentCellDown)     :pythonx wrapper.run_cell_under_cursor(vim_jupyter_shell, down=True)<CR>
 noremap  <Plug>(RunLine)                :pythonx wrapper.run_line()<CR>
 noremap  <Plug>(RunAll)                 :pythonx wrapper.run_all()<CR>
 noremap  <Plug>(PrintUnderCursor)       :pythonx wrapper.print_variable(arg="")<CR>
-noremap  <Plug>(PrintVariable)          :PrintVariable
-noremap  <Plug>(GetDocUnderCursor)      :pythonx get_doc(arg="")<CR>
-noremap  <Plug>(GetDoc)                 :GetDoc
+noremap  <Plug>(PrintVariable)          :PrintVariable<Space>
+noremap  <Plug>(GetDocUnderCursor)      :pythonx wrapper.get_doc(arg="")<CR>
+noremap  <Plug>(GetDoc)                 :GetDoc<Space>
 
 
 
 map <buffer><localleader>r              <Plug>(RunAll) 
 map <buffer><localleader>cc             <Plug>(RunCurrentCell)
+map <buffer><localleader>cd             <Plug>(RunCurrentCellDown)
 map <buffer><localleader>cn             <Plug>(RunCell)
 nmap <buffer><space>                    <Plug>(RunLine)
 map <buffer><localleader>p              <Plug>(PrintUnderCursor)
