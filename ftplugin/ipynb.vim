@@ -9,48 +9,55 @@ end
 
 pyx << EOF
 import sys
+import vim
 vim_jupyter_path = "/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
 from vimjupyterlaunch import launch
-wrapper, formatter = launch()
+launch(vim.current.buffer.name)
 EOF
 
 
-au BufWritePost *.ipynb pythonx formatter.to_ipynb()
-au VimLeave *.ipynb pythonx wrapper.shutdown_silent()
+au BufWritePost *.ipynb pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
+au VimLeave *.ipynb pythonx vim_jupyter_wrapper[vim.current.buffer.name].shutdown_silent()
 
 
 
 
-command! -nargs=0 FromIpynb               :pythonx formatter.from_ipynb()
-command! -nargs=0 ToIpynb                 :pythonx formatter.to_ipynb()
-command! -nargs=0 StartKernel             :pythonx wrapper, formatter = launch()
-command! -nargs=1 ConnectToKernel         :pythonx wrapper, formatter = launch(existing="<args>")
-command! -nargs=0 ConnectToPreviousKernel :pythonx wrapper, formatter = launch(existing="*.json")
-command! -nargs=0 KernelShutdown          :pythonx wrapper.shutdown_verbose()
-command! -nargs=0 KernelRestart           :pythonx wrapper.restart()
-command! -nargs=1 RunCell                 :pythonx wrapper.run_cell(arg="<args>")
-command! -nargs=1 PrintVariable           :pythonx wrapper.print_variable(arg="<args>")
-command! -nargs=1 GetDoc                  :pythonx wrapper.get_doc(arg="<args>")
+command! -nargs=0 FromIpynb               :pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
+command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name]formatter.to_ipynb()
+command! -nargs=0 StartKernel             :pythonx launch(vim.current.buffer.name)
+command! -nargs=1 ConnectToKernel         :pythonx launch(vim.current.buffer.name, existing="<args>")
+command! -nargs=0 ConnectToPreviousKernel :pythonx launch(vim.current.buffer.name, existing="*.json")
+command! -nargs=0 KernelShutdown          :pythonx vim_jupyter_wrapper[vim.current.buffer.name].shutdown_verbose()
+command! -nargs=0 KernelRestart           :pythonx vim_jupyter_wrapper[vim.current.buffer.name].restart()
+command! -nargs=0 RunAll                  :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_all()
+command! -nargs=0 RunLine                 :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_line()
+command! -nargs=1 RunCell                 :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell(arg="<args>")
+command! -nargs=0 RunCurrentCell          :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell_under_cursor(down=False)
+command! -nargs=0 RunCurrentCellDown      :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell_under_cursor(down=True)
+command! -nargs=1 PrintVariable           :pythonx vim_jupyter_wrapper[vim.current.buffer.name].print_variable(arg="<args>")
+command! -nargs=0 PrintUnderCursor        :pythonx vim_jupyter_wrapper[vim.current.buffer.name].print_variable(arg="")
+command! -nargs=1 GetDoc                  :pythonx vim_jupyter_wrapper[vim.current.buffer.name].get_doc(arg="<args>")
+command! -nargs=0 GetDocUnderCursor       :pythonx vim_jupyter_wrapper[vim.current.buffer.name].get_doc(arg="")
 
 
 
-noremap  <Plug>(FromIpynb)              :FromIpynb<CR>
-noremap  <Plug>(ToIpynb)                :ToIpynb<CR>
-noremap  <Plug>(ConnectToPreviousKernel):pythonx launch(existing="*.json")<CR>
-noremap  <Plug>(ConnectToKernel)        :ConnectToKernel<Space>
-noremap  <Plug>(StartKernel)            :StartKernel<CR>
-noremap  <Plug>(KernelShutdown)         :KernelShutdown<CR>
-noremap  <Plug>(KernelRestart)          :KernelRestart<CR>
-noremap  <Plug>(RunCell)                :RunCell<Space>
-noremap  <Plug>(RunCurrentCell)         :pythonx wrapper.run_cell_under_cursor(down=False)<CR>
-noremap  <Plug>(RunCurrentCellDown)     :pythonx wrapper.run_cell_under_cursor(vim_jupyter_shell, down=True)<CR>
-noremap  <Plug>(RunLine)                :pythonx wrapper.run_line()<CR>
-noremap  <Plug>(RunAll)                 :pythonx wrapper.run_all()<CR>
-noremap  <Plug>(PrintUnderCursor)       :pythonx wrapper.print_variable(arg="")<CR>
-noremap  <Plug>(PrintVariable)          :PrintVariable<Space>
-noremap  <Plug>(GetDocUnderCursor)      :pythonx wrapper.get_doc(arg="")<CR>
-noremap  <Plug>(GetDoc)                 :GetDoc<Space>
+noremap  <Plug>(FromIpynb)               :FromIpynb<CR>
+noremap  <Plug>(ToIpynb)                 :ToIpynb<CR>
+noremap  <Plug>(ConnectToPreviousKernel) :ConnectToPreviousKernel<CR>
+noremap  <Plug>(ConnectToKernel)         :ConnectToKernel<Space>
+noremap  <Plug>(StartKernel)             :StartKernel<CR>
+noremap  <Plug>(KernelShutdown)          :KernelShutdown<CR>
+noremap  <Plug>(KernelRestart)           :KernelRestart<CR>
+noremap  <Plug>(RunCell)                 :RunCell<Space>
+noremap  <Plug>(RunCurrentCell)          :RunCurrentCell<CR>
+noremap  <Plug>(RunCurrentCellDown)      :RunCurrentCellDown<CR>
+noremap  <Plug>(RunLine)                 :RunLine<CR>
+noremap  <Plug>(RunAll)                  :RunAll<CR>
+noremap  <Plug>(PrintUnderCursor)        :PrintUnderCursor<CR>
+noremap  <Plug>(PrintVariable)           :PrintVariable<Space>
+noremap  <Plug>(GetDocUnderCursor)       :GetDocUnderCursor<CR>
+noremap  <Plug>(GetDoc)                  :GetDoc<Space>
 
 
 
@@ -68,6 +75,6 @@ map <buffer><localleader>hn             <Plug>(GetDoc)
 let g:ipynb_convert_on_start = 1
 
 if g:ipynb_convert_on_start == 1
-    pythonx formatter.from_ipynb()
+    pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
 endif
 

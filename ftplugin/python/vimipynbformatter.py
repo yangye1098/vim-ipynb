@@ -9,11 +9,10 @@ from collections import OrderedDict
 
 
 class VimIpynbFormatter():
-    vim_ipynb_nbs = dict()
-    vim_ipynb_nodes = dict()
+    vim_ipynb_nb = None
+    vim_ipynb_cells = OrderedDict()
     kernel_info = {}
     shell = None
-    writefile = vim.Function('writefile')
 
     def __init__(self, shell=None):
         self.shell = shell
@@ -25,7 +24,7 @@ class VimIpynbFormatter():
         self.update_from_buffer(cb, cb_name)
 
         with open(cb_name, "w") as cf:
-            nbformat.write(self.vim_ipynb_nbs[cb_name], cf)
+            nbformat.write(self.vim_ipynb_nb, cf)
 
     def from_ipynb(self):
         cb = vim.current.buffer
@@ -33,18 +32,18 @@ class VimIpynbFormatter():
 
         with open(cb_name) as cf:
             try:
-                self.vim_ipynb_nbs[cb_name] = nbformat.read(
+                self.vim_ipynb_nb = nbformat.read(
                     cf, as_version=current_nbformat)
             except nbformat.reader.NotJSONError:
-                self.vim_ipynb_nbs[cb_name] = self.nb_from_buffer(cb)
+                self.vim_ipynb_nb = self.nb_from_buffer(cb)
             finally:
                 pass
 
         cb[:] = None
         last_row = 1
         cells = OrderedDict()
-        for n in range(len(self.vim_ipynb_nbs[cb_name].cells)):
-            cell = self.vim_ipynb_nbs[cb_name].cells[n]
+        for n in range(len(self.vim_ipynb_nb.cells)):
+            cell = self.vim_ipynb_nb.cells[n]
             name = cell["cell_type"] + str(n)
             if cell["cell_type"] == "code":
                 last_row = self.buffer_append_beauty(
@@ -58,19 +57,19 @@ class VimIpynbFormatter():
                 last_row = self.buffer_append_beauty(
                     cb, last_row, cell["source"])
 
-            cells[name] = self.vim_ipynb_nbs[cb_name].cells[n]
-        self.vim_ipynb_nodes[cb_name] = cells
+            cells[name] = self.vim_ipynb_nb.cells[n]
+        self.vim_ipynb_cells = cells
 
-    def update_from_buffer(self, cb, cb_name):
-        self.vim_ipynb_nbs[cb_name].metadata["language_info"] \
+    def update_from_buffer(self, cb):
+        self.vim_ipynb_nb.metadata["language_info"] \
             = self.shell.kernel_info["language_info"]
-        self.vim_ipynb_nbs[cb_name].nbformat = current_nbformat
-        self.vim_ipynb_nbs[cb_name].nbformat_minor = current_nbformat_minor
+        self.vim_ipynb_nb.nbformat = current_nbformat
+        self.vim_ipynb_nb.nbformat_minor = current_nbformat_minor
         new_cells = self.cells_from_buffer(
-            cb, self.vim_ipynb_nodes[cb_name])
-        self.vim_ipynb_nbs[cb_name].cells = []
+            cb, self.vim_ipynb_cells)
+        self.vim_ipynb_nb.cells = []
         for cell in new_cells:
-            self.vim_ipynb_nbs[cb_name].cells.append(new_cells[cell])
+            self.vim_ipynb_nb.cells.append(new_cells[cell])
 
     def nb_from_buffer(self, cb):
         new_nb = nbformat.v4.new_notebook()
@@ -94,7 +93,8 @@ class VimIpynbFormatter():
                 matchObj = re.match(r'^#%%\{(.*?)[\s\}]', line)
                 if matchObj:
                     if name is not None:
-                        new_cells[name]["source"] = new_cells[name]["source"][:-2]
+                        new_cells[name]["source"] = \
+                            new_cells[name]["source"][:-2]
 
                     name = matchObj.group(1)
                     if name.isalnum():
@@ -115,7 +115,8 @@ class VimIpynbFormatter():
                     matchObj = re.match(r'^```\{(.*?)[\s\}]', line)
                     if matchObj:
                         if name is not None:
-                            new_cells[name]["source"] = new_cells[name]["source"][:-2]
+                            new_cells[name]["source"] \
+                                = new_cells[name]["source"][:-2]
                         in_code = True
                         name = matchObj.group(1)
                         if name.isalnum():

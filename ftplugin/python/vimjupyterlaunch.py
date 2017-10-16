@@ -6,14 +6,14 @@ from vimjupyter import VimJupyter
 from vimjupytershellwrapper import VimJupyterShellWrapper
 from vimipynbformatter import VimIpynbFormatter
 
-vim_jupyter = VimJupyter()
-vim_jupyter_shell = None
-vim_jupyter_client = None
-vim_jupyter_formatter = None
-vim_jupyter_wrapper = None
+vim_jupyter = dict()
+vim_jupyter_shell = dict()
+vim_jupyter_client = dict()
+vim_jupyter_formatter = dict()
+vim_jupyter_wrapper = dict()
 
 
-def launch(existing=""):
+def launch(name, existing=""):
     global vim_jupyter
     global vim_jupyter_shell
     global vim_jupyter_client
@@ -21,10 +21,10 @@ def launch(existing=""):
     global vim_jupyter_wrapper
     global vim_jupyter_formatter
 
-    vim_jupyter.initialize(existing=existing)
-    vim_jupyter_shell = vim_jupyter.shell
-    vim_jupyter_client = vim_jupyter.kernel_client
-    vim_jupyter_kernel_manager = vim_jupyter.kernel_manager
-    vim_jupyter_wrapper = VimJupyterShellWrapper(vim_jupyter_shell)
-    vim_jupyter_formatter = VimIpynbFormatter(vim_jupyter_shell)
-    return vim_jupyter_wrapper, vim_jupyter_formatter
+    vim_jupyter[name] = VimJupyter()
+    vim_jupyter[name].initialize(existing=existing)
+    vim_jupyter_shell[name] = vim_jupyter[name].shell
+    vim_jupyter_client[name] = vim_jupyter[name].kernel_client
+    vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
+    vim_jupyter_wrapper[name] = VimJupyterShellWrapper(vim_jupyter_shell[name])
+    vim_jupyter_formatter[name] = VimIpynbFormatter(vim_jupyter_shell[name])

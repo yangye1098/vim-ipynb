@@ -267,54 +267,6 @@ class VimJupyter(ConnectionFileMixin):
 
         atexit.register(self.kernel_manager.cleanup_connection_file)
 
-    def change_kernel(self):
-        # Don't let Qt or ZMQ swallow KeyboardInterupts.
-        if self.existing:
-            self.kernel_manager = None
-            return
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
-
-        # Create a KernelManager and start a kernel.
-        try:
-            self.kernel_manager = self.kernel_manager_class(
-                                    ip=self.ip,
-                                    session=self.session,
-                                    transport=self.transport,
-                                    shell_port=self.shell_port,
-                                    iopub_port=self.iopub_port,
-                                    stdin_port=self.stdin_port,
-                                    hb_port=self.hb_port,
-                                    connection_file=self.connection_file,
-                                    kernel_name=self.kernel_name,
-                                    parent=self,
-                                    data_dir=self.data_dir,
-            )
-        except NoSuchKernel:
-            self.log.critical("Could not find kernel %s", self.kernel_name)
-            self.exit(1)
-
-        self.kernel_manager.client_factory = self.kernel_client_class
-        # FIXME: remove special treatment of IPython kernels
-        kwargs = {}
-        if self.kernel_manager.ipykernel:
-            kwargs['extra_arguments'] = self.kernel_argv
-        self.kernel_manager.start_kernel(**kwargs)
-        atexit.register(self.kernel_manager.cleanup_ipc_files)
-
-        if self.sshserver:
-            # ssh, write new connection file
-            self.kernel_manager.write_connection_file()
-
-        # in case KM defaults / ssh writing changes things:
-        km = self.kernel_manager
-        self.shell_port = km.shell_port
-        self.iopub_port = km.iopub_port
-        self.stdin_port = km.stdin_port
-        self.hb_port = km.hb_port
-        self.connection_file = km.connection_file
-
-        atexit.register(self.kernel_manager.cleanup_connection_file)
-
     def init_kernel_client(self):
         if self.kernel_manager is not None:
             self.kernel_client = self.kernel_manager.client()
