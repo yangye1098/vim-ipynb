@@ -45,5 +45,7 @@ def clean_up(name):
 
 
 def clean_all():
-    for name in vim_jupyter:
-        clean_up(name)
+    if isinstance(vim_jupyter, dict):
+        names = list(vim_jupyter.keys())
+        for name in names:
+            clean_up(name)

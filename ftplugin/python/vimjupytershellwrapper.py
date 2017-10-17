@@ -23,7 +23,7 @@ class VimJupyterShellWrapper():
         row_finish = search("^```\s*[^{]*", "cW")
         row_begin = search("^```\s*{", "bcW")
         cursor(pos[0], pos[1])
-        if row_finish =< pos[0] or row_begin >= pos[0]:
+        if row_finish <= pos[0] or row_begin >= pos[0]:
             vim.command("echo \"Not inside a code cell\"")
             return False
         return True

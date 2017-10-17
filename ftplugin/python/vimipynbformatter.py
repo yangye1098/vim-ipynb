@@ -138,6 +138,9 @@ class VimIpynbFormatter():
                             new_cells[name]["source"] += line + "\n"
             elif in_code:
                 matchObj = re.match(r'^```\s*', line)
+                if name is not None:
+                    new_cells[name]["source"] = \
+                        new_cells[name]["source"][:-2]
                 if matchObj:
                     in_code = False
                 else:

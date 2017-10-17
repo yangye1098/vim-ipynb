@@ -5,14 +5,15 @@ import vim
 class VimJupterDisplayManager():
     """ Deal with the output display in Vim """
 
-    stdout_buffer_name = "Vim-Jupter-Output"
+    buffer_name = ""
+
+    stdout_buffer_name = ""
+    stdout_id = 0
     stdout_buffer = None
     stdout_ratio = 3
     stdout_dir = "above"
     stdout_last_row = 1
 
-    stdin_buffer_name = "Vim-Jupter-Input"
-    stdin_buffer = None
 
     # ratio for window split
     w_origin_ID = 0
@@ -28,7 +29,9 @@ class VimJupterDisplayManager():
         """ Open window to interact with user.
 
         """
+        self.buffer_name = vim.current.buffer.name
         self.w_origin_ID = vim.eval("win_getid()")
+        self.stdout_buffer_name = "Vim-Jupyter-Output: " + self.buffer_name
         if kind == "stdout":
             cmd = self.open_stdout_window()
             vim.command(cmd)
@@ -65,9 +68,21 @@ class VimJupterDisplayManager():
                 self.stdout_buffer_name
         return cmd
 
+    def close_stdout_window(self):
+        stdout_id = self.bufwinid(self.stdout_buffer_name)
+        if stdout_id != -1:
+            self.win_gotoid(stdout_id)
+        vim.command("q!")
+
     def handle_stdout(self, msg=""):
         if msg:
             msg_list = msg.split('\n')
+            for n in len(msg_list):
+                if n == 0:
+                    n_space = msg_list[n].find(":")
+                else:
+                    msg_list[n] = '\s'*(n_space) + '> ' + msg_list[n]
+
             if self.stdout_buffer[self.stdout_last_row - 1] != '':
                 self.stdout_buffer.append(msg_list)
             else:
@@ -98,8 +113,6 @@ class VimJupterDisplayManager():
         while(choice not in choice_list):
             choice = f("Please choose again, " + msg)
         return choice_list.index(choice)
-
-
 
     def change_ratio(self, ratio):
         self.ratio = ratio
