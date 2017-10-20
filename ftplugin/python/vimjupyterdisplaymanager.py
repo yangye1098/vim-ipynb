@@ -6,13 +6,15 @@ class VimJupterDisplayManager():
     """ Deal with the output display in Vim """
 
     buffer_name = ""
+    align = -1
+    ansiesc_on = False
 
     stdout_buffer_name = ""
     stdout_id = 0
     stdout_buffer = None
     stdout_ratio = 3
     stdout_dir = "above"
-    stdout_last_row = 1
+    stdout_last_row = 0
 
 
     # ratio for window split
@@ -31,13 +33,8 @@ class VimJupterDisplayManager():
         """
         self.buffer_name = vim.current.buffer.name
         self.w_origin_ID = vim.eval("win_getid()")
-        self.stdout_buffer_name = "Vim-Jupyter-Output: " + self.buffer_name
         if kind == "stdout":
-            cmd = self.open_stdout_window()
-            vim.command(cmd)
-            self.stdout_buffer = vim.current.buffer
-            self.clear_stdout_buffer()
-            self.stdout_last_row = vim.current.window.cursor[0]
+            self.open_stdout_window()
 
     def open_stdout_window(self, ratio=None, wdir=None):
         if ratio is None:
@@ -46,6 +43,7 @@ class VimJupterDisplayManager():
         if wdir is None:
             wdir = self.stdout_dir
 
+        self.stdout_buffer_name =  self.buffer_name + "-Vim-Jupyter-Output"
         height = vim.current.window.height/ratio
         width = vim.current.window.width/ratio
 
@@ -63,10 +61,17 @@ class VimJupterDisplayManager():
         if stdout_id != -1:
             self.win_gotoid(stdout_id)
             cmd = "set noreadonly modifiable"
+            vim.command(cmd)
         else:
             cmd += "+set\ noreadonly\ modifiable " + \
                 self.stdout_buffer_name
-        return cmd
+            vim.command(cmd)
+            if self.ansiesc_on is False:
+                vim.command("AnsiEsc")
+                self.ansiesc_on = True
+        self.stdout_buffer = vim.current.buffer
+        self.clear_stdout_buffer()
+        self.stdout_last_row = vim.current.window.cursor[0] - 1
 
     def close_stdout_window(self):
         stdout_id = self.bufwinid(self.stdout_buffer_name)
@@ -74,21 +79,32 @@ class VimJupterDisplayManager():
             self.win_gotoid(stdout_id)
         vim.command("q!")
 
+    def handle_continous(self, lines=""):
+        """ Handle the display of continue lines
+        """
+        self.open_window("stdout")
+        self.handle_stdout(lines + " ...")
+        self.finish_stdout()
+
     def handle_stdout(self, msg=""):
         if msg:
+            msg = msg.rstrip()
             msg_list = msg.split('\n')
-            for n in len(msg_list):
-                if n == 0:
-                    n_space = msg_list[n].find(":")
-                else:
-                    msg_list[n] = '\s'*(n_space) + '> ' + msg_list[n]
+            for n in range(len(msg_list)):
+                if self.align >= 0:
+                    msg_list[n] = ' '*(self.align) + '> ' + msg_list[n]
 
-            if self.stdout_buffer[self.stdout_last_row - 1] != '':
-                self.stdout_buffer.append(msg_list)
-            else:
-                self.stdout_buffer.append(msg_list,
-                                          self.stdout_last_row - 1)
+            self.stdout_buffer.append(msg_list, self.stdout_last_row)
             self.stdout_last_row += len(msg_list)
+            self.align = -1
+
+    def handle_prompt(self, prompt=""):
+        if prompt:
+            self.align = prompt.lstrip().find(":")
+            msg_list = prompt.split('\n')
+            self.stdout_buffer.append(msg_list, self.stdout_last_row)
+            self.stdout_last_row += len(msg_list)
+
 
     def clear_stdout_buffer(self):
         if self.stdout_buffer is not None:

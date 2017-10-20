@@ -29,32 +29,35 @@ class VimIpynbFormatter():
     def from_ipynb(self):
         cb = vim.current.buffer
         cb_name = vim.current.buffer.name
-
-        with open(cb_name) as cf:
-            try:
-                self.vim_ipynb_nb = nbformat.read(
-                    cf, as_version=current_nbformat)
-            except nbformat.reader.NotJSONError:
-                self.vim_ipynb_nb = self.nb_from_buffer(cb)
-            finally:
-                pass
+        try:
+            with open(cb_name) as cf:
+                try:
+                    self.vim_ipynb_nb = nbformat.read(
+                        cf, as_version=current_nbformat)
+                except nbformat.reader.NotJSONError:
+                    self.vim_ipynb_nb = self.nb_from_buffer(cb)
+                finally:
+                    pass
+        except FileNotFoundError:
+            self.vim_ipynb_nb = self.nb_from_buffer(cb)
 
         cb[:] = None
-        last_row = 1
+        last_row = 0
         cells = OrderedDict()
         for n in range(len(self.vim_ipynb_nb.cells)):
             cell = self.vim_ipynb_nb.cells[n]
             name = cell["cell_type"] + str(n)
             if cell["cell_type"] == "code":
-                last_row = self.buffer_append_beauty(
+                last_row = self.buffer_append(
                     cb, last_row, "\n```{" + name + " }")
-                last_row = self.buffer_append_beauty(
+                last_row = self.buffer_append(
                     cb, last_row, cell["source"] + "\n```")
+                # last_row = self.buffer_append(cb, last_row, "\n```")
 
             elif cell["cell_type"] == "markdown":
-                last_row = self.buffer_append_beauty(
+                last_row = self.buffer_append(
                     cb, last_row, "\n#%%{" + name + " }")
-                last_row = self.buffer_append_beauty(
+                last_row = self.buffer_append(
                     cb, last_row, cell["source"])
 
             cells[name] = self.vim_ipynb_nb.cells[n]
@@ -87,12 +90,16 @@ class VimIpynbFormatter():
         in_code = False
         new_cells = OrderedDict()
         name = None
+        nrow = len(cb)
+  #       if cb[nrow-1] == '':
+  #           nrow -= 1
 
-        for line in cb:
+        for l in range(nrow):
             if not in_code:
-                matchObj = re.match(r'^#%%\{(.*?)[\s\}]', line)
+                matchObj = re.match(r'^#%%\{(.*?)[\s\}]', cb[l])
                 if matchObj:
                     if name is not None:
+                        # trim the last "\n" appended in from_ipynb
                         new_cells[name]["source"] = \
                             new_cells[name]["source"][:-2]
 
@@ -112,9 +119,10 @@ class VimIpynbFormatter():
                             one letter")
                     continue
                 else:
-                    matchObj = re.match(r'^```\{(.*?)[\s\}]', line)
+                    matchObj = re.match(r'^```\{(.*?)[\s\}]', cb[l])
                     if matchObj:
                         if name is not None:
+                            # trim the last "\n" appended in from_ipynb
                             new_cells[name]["source"] \
                                 = new_cells[name]["source"][:-2]
                         in_code = True
@@ -135,22 +143,19 @@ class VimIpynbFormatter():
                         continue
                     else:
                         if name is not None:
-                            new_cells[name]["source"] += line + "\n"
+                            new_cells[name]["source"] += (cb[l] + '\n')
             elif in_code:
-                matchObj = re.match(r'^```\s*', line)
-                if name is not None:
-                    new_cells[name]["source"] = \
-                        new_cells[name]["source"][:-2]
+                matchObj = re.match(r'^```\s*[^\{]*', cb[l])
                 if matchObj:
                     in_code = False
                 else:
-                    new_cells[name]["source"] += line + "\n"
+                    new_cells[name]["source"] += (cb[l] + '\n')
+        if name is not None:
+            # trim the last "\n" in the string, incase vim append a new line
+            new_cells[name]["source"] = new_cells[name]["source"][:-2]
         return new_cells
 
-    def buffer_append_beauty(self, cb, last_row, msg=""):
-        msg_list = msg.split('\n')
-        if cb[last_row - 1] == "":
-            cb.append(msg_list, last_row-1)
-        else:
-            cb.append(msg_list, last_row)
+    def buffer_append(self, cb, last_row, msg=""):
+        msg_list = msg.split("\n")
+        cb.append(msg_list, last_row)
         return last_row + len(msg_list)
