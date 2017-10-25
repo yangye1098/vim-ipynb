@@ -41,9 +41,6 @@ def change_kernel(name, existing=""):
     if name not in vim_jupyter:
         launch(name, existing)
     else:
-        if vim_jupyter_kernel_manager[name] is not None and \
-                vim_jupyter_kernel_manager[name].is_alive():
-            vim_jupyter_kernel_manager[name].shutdown_kernel()
         vim_jupyter[name].initialize(existing=existing)
         vim_jupyter_shell[name] = vim_jupyter[name].shell
         vim_jupyter_client[name] = vim_jupyter[name].kernel_client

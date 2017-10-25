@@ -69,6 +69,7 @@ class VimJupyter(ConnectionFileMixin):
     classes = classes
     kernel_manager_class = KernelManager
     kernel_client_class = BlockingKernelClient
+    kernel_manager = None
 
     kernel_argv = List(Unicode())
 
@@ -299,11 +300,14 @@ class VimJupyter(ConnectionFileMixin):
         #     return
         self.existing = existing
         self.runtime_dir = jupyter_runtime_dir()
-        self.connection_file = self._new_connection_file()
+        if not self.existing:
+            self.connection_file = self._new_connection_file()
+
         if not os.path.isdir(self.runtime_dir):
             os.mkdir(self.runtime_dir)
 
-        if self.existing and self.kernel_manager is not None:
+        if self.kernel_manager is not None and\
+                self.kernel_manager.is_alive():
             # first, shutdown the old kernel if own one
             self.kernel_manager.shutdown_kernel(restart=False)
 
