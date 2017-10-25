@@ -21,9 +21,9 @@ def launch(name, existing=""):
     global vim_jupyter_kernel_manager
     global vim_jupyter_wrapper
     global vim_jupyter_formatter
+    # only launch once, reconnetiong is dealt in other functions
     if name in vim_jupyter:
         return
-
     vim_jupyter[name] = VimJupyter()
     vim_jupyter[name].initialize(existing=existing)
     vim_jupyter_shell[name] = vim_jupyter[name].shell
@@ -31,6 +31,25 @@ def launch(name, existing=""):
     vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
     vim_jupyter_wrapper[name] = VimJupyterShellWrapper(vim_jupyter_shell[name])
     vim_jupyter_formatter[name] = VimIpynbFormatter(vim_jupyter_shell[name])
+
+
+def change_kernel(name, existing=""):
+    global vim_jupyter_shell
+    global vim_jupyter_client
+    global vim_jupyter_kernel_manager
+    global vim_jupyter_wrapper
+    if name not in vim_jupyter:
+        launch(name, existing)
+    else:
+        if vim_jupyter_kernel_manager[name] is not None and \
+                vim_jupyter_kernel_manager[name].is_alive():
+            vim_jupyter_kernel_manager[name].shutdown_kernel()
+        vim_jupyter[name].initialize(existing=existing)
+        vim_jupyter_shell[name] = vim_jupyter[name].shell
+        vim_jupyter_client[name] = vim_jupyter[name].kernel_client
+        vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
+        vim_jupyter_wrapper[name] = VimJupyterShellWrapper(
+            vim_jupyter_shell[name])
 
 
 def clean_up(name):

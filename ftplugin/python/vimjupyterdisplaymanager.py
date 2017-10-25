@@ -16,7 +16,6 @@ class VimJupterDisplayManager():
     stdout_dir = "above"
     stdout_last_row = 0
 
-
     # ratio for window split
     w_origin_ID = 0
 
@@ -43,7 +42,7 @@ class VimJupterDisplayManager():
         if wdir is None:
             wdir = self.stdout_dir
 
-        self.stdout_buffer_name =  self.buffer_name + "-Vim-Jupyter-Output"
+        self.stdout_buffer_name = self.buffer_name + "-Vim-Jupyter-Output"
         height = vim.current.window.height/ratio
         width = vim.current.window.width/ratio
 
@@ -105,7 +104,6 @@ class VimJupterDisplayManager():
             self.stdout_buffer.append(msg_list, self.stdout_last_row)
             self.stdout_last_row += len(msg_list)
 
-
     def clear_stdout_buffer(self):
         if self.stdout_buffer is not None:
             self.stdout_buffer[:] = None
@@ -117,15 +115,15 @@ class VimJupterDisplayManager():
 
     def handle_stdin(self, prompt):
         f = vim.Function("input")
-        return f(prompt)
+        return f(prompt).decode('utf-8')
 
     def handle_password(self, prompt):
         f = vim.Function("inputsecret")
-        return f(prompt)
+        return f(prompt).decode('utf-8')
 
     def handle_confirm(self, msg, choice_list):
         f = vim.Function("input")
-        choice = f(msg)
+        choice = f(msg).decode('utf-8')
         while(choice not in choice_list):
             choice = f("Please choose again, " + msg)
         return choice_list.index(choice)

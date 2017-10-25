@@ -12,7 +12,7 @@ import sys
 import vim
 vim_jupyter_path = "/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
-from vimjupyterlaunch import *
+from vimjupytermanager import *
 launch(vim.current.buffer.name)
 EOF
 
@@ -34,8 +34,8 @@ endfunction
 command! -nargs=0 FromIpynb               :pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
 command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 command! -nargs=0 StartKernel             :pythonx launch(vim.current.buffer.name)
-command! -nargs=1 ConnectToKernel         :pythonx launch(vim.current.buffer.name, existing="<args>")
-command! -nargs=0 ConnectToPreviousKernel :pythonx launch(vim.current.buffer.name, existing="*.json")
+command! -nargs=1 ConnectToKernel         :pythonx change_kernel(vim.current.buffer.name, existing="<args>")
+command! -nargs=0 ConnectToPreviousKernel :pythonx change_kernel(vim.current.buffer.name, existing="*.json")
 command! -nargs=0 KernelShutdown          :pythonx vim_jupyter_wrapper[vim.current.buffer.name].shutdown_verbose()
 command! -nargs=0 KernelRestart           :pythonx vim_jupyter_wrapper[vim.current.buffer.name].restart()
 command! -nargs=0 RunAll                  :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_all()

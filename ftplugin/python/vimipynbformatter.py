@@ -1,11 +1,15 @@
-import vim
-import nbformat
+""" For format .ipynb notebook
+
+"""
+from collections import OrderedDict
 from nbformat.v4 import (
     nbformat as current_nbformat,
     nbformat_minor as current_nbformat_minor
 )
+
+import vim
+import nbformat
 import re
-from collections import OrderedDict
 
 
 class VimIpynbFormatter():
@@ -13,6 +17,12 @@ class VimIpynbFormatter():
     vim_ipynb_cells = OrderedDict()
     kernel_info = {}
     shell = None
+    kernal_language = ""
+    language_supported = ["python"]
+    language_pattern = ""
+    for language in language_supported:
+        language_pattern += language + '|'
+    language_pattern = language_pattern.rstrip('|')
 
     def __init__(self, shell=None):
         self.shell = shell
@@ -40,23 +50,28 @@ class VimIpynbFormatter():
                     pass
         except FileNotFoundError:
             self.vim_ipynb_nb = self.nb_from_buffer(cb)
-
+        self.kernel_language = self.vim_ipynb_nb[
+                "metadata"]["language_info"]["name"]
         cb[:] = None
         last_row = 0
         cells = OrderedDict()
+        n_code = 0
+        n_mkd = 0
         for n in range(len(self.vim_ipynb_nb.cells)):
             cell = self.vim_ipynb_nb.cells[n]
-            name = cell["cell_type"] + str(n)
             if cell["cell_type"] == "code":
+                n_code += 1
+                name = self.kernel_language + " code" + str(n_code)
                 last_row = self.buffer_append(
-                    cb, last_row, "\n```{" + name + " }")
+                    cb, last_row, "\n```" + name)
                 last_row = self.buffer_append(
                     cb, last_row, cell["source"] + "\n```")
-                # last_row = self.buffer_append(cb, last_row, "\n```")
 
             elif cell["cell_type"] == "markdown":
+                n_mkd += 1
+                name = "markdown" + str(n_mkd)
                 last_row = self.buffer_append(
-                    cb, last_row, "\n#%%{" + name + " }")
+                    cb, last_row, "\n#%%" + name)
                 last_row = self.buffer_append(
                     cb, last_row, cell["source"])
 
@@ -91,12 +106,16 @@ class VimIpynbFormatter():
         new_cells = OrderedDict()
         name = None
         nrow = len(cb)
-  #       if cb[nrow-1] == '':
-  #           nrow -= 1
+        language_pattern = r""
+        code_cell_start_pattern = \
+            re.compile(r'^```(?:' + language_pattern +
+                       'python)\s(?:(.*?)$|(.*?)\s(.*?)$)')
+        code_cell_stop_pattern = re.compile(r'^```\s*$')
+        markdown_cell_pattern = re.compile(r'^#%%(?:(.*?)$|(.*?)\s(.*?)$)')
 
         for l in range(nrow):
             if not in_code:
-                matchObj = re.match(r'^#%%\{(.*?)[\s\}]', cb[l])
+                matchObj = markdown_cell_pattern.match(cb[l])
                 if matchObj:
                     if name is not None:
                         # trim the last "\n" appended in from_ipynb
@@ -116,10 +135,10 @@ class VimIpynbFormatter():
                         raise ValueError(
                             "Cell names should contain only \
                             numbers or letters. Need at least \
-                            one letter")
+                            one letter: {0}".format(name))
                     continue
                 else:
-                    matchObj = re.match(r'^```\{(.*?)[\s\}]', cb[l])
+                    matchObj = code_cell_start_pattern.match(cb[l])
                     if matchObj:
                         if name is not None:
                             # trim the last "\n" appended in from_ipynb
@@ -139,13 +158,13 @@ class VimIpynbFormatter():
                             raise ValueError(
                                 "Cell names should contain only \
                                 numbers or letters. Need at least \
-                                one letter")
+                                one letter: {0}".format(name))
                         continue
                     else:
                         if name is not None:
                             new_cells[name]["source"] += (cb[l] + '\n')
             elif in_code:
-                matchObj = re.match(r'^```\s*[^\{]*', cb[l])
+                matchObj = code_cell_stop_pattern.match(cb[l])
                 if matchObj:
                     in_code = False
                 else:

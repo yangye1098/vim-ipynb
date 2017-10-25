@@ -72,7 +72,7 @@ class VimJupyterShell(LoggingConfigurable):
 
     banner = Unicode(
         'Vim Jupyter console {version}\n\n{kernel_banner}', config=True,
-        help=("Text to display before the first prompt. Will be formatted with "
+        help=("Text to display before the first prompt. Will be formatted with"
               "variables {version} and {kernel_banner}.")
     )
 
@@ -232,20 +232,25 @@ class VimJupyterShell(LoggingConfigurable):
 
     def ask_restart(self):
         self.vim_display_manager.open_window(kind="stdout")
-        self.kernel_manager.restart_kernel()
-        self.vim_display_manager.handle_stdout("Kernel restart!")
-        self.vim_display_manager.finish_stdout()
+        if self.manager is not None:
+            self.manager.restart_kernel()
+            self.vim_display_manager.handle_stdout("Kernel restart!")
+            self.vim_display_manager.finish_stdout()
+        else:
+            self.vim_display_manager.handle_stdout("Not own a kernel!")
+            self.vim_display_manager.finish_stdout()
 
     def ask_shutdown(self, silent=True):
         if silent is False:
             choice = self.vim_display_manager.handle_confirm(
-                "Confirm shutdown kernel? y/n", {'y', 'n'})
+                "Confirm shutdown kernel? y/n", ['y', 'n'])
             if choice == 1:
                 return
         msg_id = self.client.shutdown(restart=False)
         while self.client.is_alive():
             try:
-                msg = self.client.shell_channel.get_msg(block=False, timeout=0.05)
+                msg = self.client.shell_channel.get_msg(
+                    block=False, timeout=0.05)
                 if msg["parent_header"].get("msg_id", None) == msg_id:
                     break
             except Empty:
@@ -254,8 +259,8 @@ class VimJupyterShell(LoggingConfigurable):
                 break
         if silent is False:
             self.vim_display_manager.open_window(kind="stdout")
-            self.vim_display_manager.handle_stdout("The kernel has been shut down: "
-                                               + msg["header"]["session"])
+            self.vim_display_manager.handle_stdout(
+                "The kernel has been shut down: " + msg["header"]["session"])
             self.vim_display_manager.finish_stdout()
 
     def check_complete(self, code):
@@ -316,20 +321,17 @@ class VimJupyterShell(LoggingConfigurable):
         """ Check the completeness of the lines stored in
         continous_line_buffer. If the code is complete, run the whole code,
         otherwise, call vim_display_manager.handle_continous() to deal with the
-        display of imcomplete code. 
+        display of imcomplete code.
         """
         self.continous_line_buffer += line + "\n"
         more, indent = self.check_complete(self.continous_line_buffer)
 
         if more:
-            self.vim_display_manager.handle_continous(self.continous_line_buffer) 
+            self.vim_display_manager.handle_continous(self.continous_line_buffer)
         else:
             code = self.continous_line_buffer
-            self.continous_line_buffer = "" 
+            self.continous_line_buffer = ""
             self.run_cell(code, store_history)
-
-
-
 
     # This is set from payloads in handle_execute_reply
     next_input = None
