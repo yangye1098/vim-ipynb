@@ -33,7 +33,7 @@ endfunction
 
 command! -nargs=0 FromIpynb               :pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
 command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
-command! -nargs=0 ToMarkdown              :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_Markdown()
+command! -nargs=0 ToMarkdown              :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_markdown()
 command! -nargs=0 StartKernel             :pythonx change_kernel(vim.current.buffer.name)
 command! -nargs=1 ConnectToKernel         :pythonx change_kernel(vim.current.buffer.name, existing="<args>")
 command! -nargs=0 ConnectToPreviousKernel :pythonx change_kernel(vim.current.buffer.name, existing="kernel-*.json")
