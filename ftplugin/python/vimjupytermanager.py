@@ -1,7 +1,5 @@
 import sys
 
-sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python")
-
 from vimjupyter import VimJupyter
 from vimjupytershellwrapper import VimJupyterShellWrapper
 from vimipynbformatter import VimIpynbFormatter
@@ -31,6 +29,7 @@ def launch(name, existing=""):
     vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
     vim_jupyter_wrapper[name] = VimJupyterShellWrapper(vim_jupyter_shell[name])
     vim_jupyter_formatter[name] = VimIpynbFormatter(vim_jupyter_shell[name])
+    vim_jupyter_shell[name].vim_ipynb_formatter = vim_jupyter_formatter[name]
 
 
 def change_kernel(name, existing=""):
@@ -41,12 +40,15 @@ def change_kernel(name, existing=""):
     if name not in vim_jupyter:
         launch(name, existing)
     else:
+        vim_jupyter_formatter[name].clear_all_output()
         vim_jupyter[name].initialize(existing=existing)
         vim_jupyter_shell[name] = vim_jupyter[name].shell
         vim_jupyter_client[name] = vim_jupyter[name].kernel_client
         vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
         vim_jupyter_wrapper[name] = VimJupyterShellWrapper(
             vim_jupyter_shell[name])
+        vim_jupyter_shell[name].vim_ipynb_formmater = \
+            vim_jupyter_formatter[name]
 
 
 def clean_up(name):

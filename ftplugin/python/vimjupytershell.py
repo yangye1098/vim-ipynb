@@ -24,8 +24,6 @@ from traitlets.config import SingletonConfigurable, LoggingConfigurable
 
 from jupyter_console.zmqhistory import ZMQHistoryManager
 
-sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
-
 from _version import __version__
 from vimjupyterdisplaymanager import VimJupterDisplayManager
 
@@ -88,6 +86,7 @@ class VimJupyterShell(LoggingConfigurable):
     )
 
     vim_display_manager = VimJupterDisplayManager()
+    vim_ipynb_formatter = None
 
     image_handler = Enum(
         ('PIL', 'stream', 'tempfile', 'callable'),
@@ -232,6 +231,7 @@ class VimJupyterShell(LoggingConfigurable):
 
     def ask_restart(self):
         self.vim_display_manager.open_window(kind="stdout")
+        self.vim_ipynb_formatter.clear_all_output()
         if self.manager is not None:
             self.manager.restart_kernel()
             self.vim_display_manager.handle_stdout("Kernel restart!")
@@ -246,28 +246,28 @@ class VimJupyterShell(LoggingConfigurable):
                 "Confirm shutdown kernel? y/n", ['y', 'n'])
             if choice == 1:
                 return
-        msg_id = self.client.shutdown(restart=False)
-        while self.client.is_alive():
-            try:
-                msg = self.client.shell_channel.get_msg(
-                    block=False, timeout=0.05)
-                if msg["parent_header"].get("msg_id", None) == msg_id:
-                    break
-            except Empty:
-                pass
-            else:
-                break
+
+        if self.manager is not None:
+            self.manager.shutdown_kernel(restart=False)
+        else:
+            self.vim_display_manager.open_window(kind="stdout")
+            self.vim_display_manager.handle_stdout(
+                "Not own the current kernel")
+            self.vim_display_manager.finish_stdout()
+            return
+
         if silent is False:
             self.vim_display_manager.open_window(kind="stdout")
             self.vim_display_manager.handle_stdout(
-                "The kernel has been shut down: " + msg["header"]["session"])
+                "The kernel has been shut down: "+self.manager.connection_file)
             self.vim_display_manager.finish_stdout()
 
     def check_complete(self, code):
         if self.use_kernel_is_complete:
             msg_id = self.client.is_complete(code)
             try:
-                return self.handle_is_complete_reply(msg_id, timeout=self.kernel_is_complete_timeout)
+                return self.handle_is_complete_reply(
+                        msg_id, timeout=self.kernel_is_complete_timeout)
             except SyntaxError:
                 return False, ""
         else:
@@ -286,23 +286,25 @@ class VimJupyterShell(LoggingConfigurable):
         Overloaded methods may want to examine the comeplete source. Its is
         in the self._source_lines_buffered list.
         """
-        ## Get the is_complete response:
+        # Get the is_complete response:
         msg = None
         try:
-            msg = self.client.shell_channel.get_msg(block=True, timeout=timeout)
+            msg = self.client.shell_channel.get_msg(
+                    block=True, timeout=timeout)
         except Empty:
-            warn('The kernel did not respond to an is_complete_request. '
-                 'Setting `use_kernel_is_complete` to False.')
+            print('The kernel did not respond to an is_complete_request. '
+                  'Setting `use_kernel_is_complete` to False.')
             self.use_kernel_is_complete = False
             return False, ""
-        ## Handle response:
+        # Handle response:
         if msg["parent_header"].get("msg_id", None) != msg_id:
-            warn('The kernel did not respond properly to an is_complete_request: %s.' % str(msg))
+            print('The kernel did not respond properly\
+                    to an is_complete_request: %s.' % str(msg))
             return False, ""
         else:
             status = msg["content"].get("status", None)
             indent = msg["content"].get("indent", "")
-        ## Return more? and indent string
+        # Return more? and indent string
         if status == "complete":
             return False, indent
         elif status == "incomplete":
@@ -312,7 +314,8 @@ class VimJupyterShell(LoggingConfigurable):
         elif status == "unknown":
             return False, indent
         else:
-            warn('The kernel sent an invalid is_complete_reply status: "%s".' % status)
+            print('The kernel sent an invalid is_complete_reply\
+                    status: "%s".' % status)
             return False, indent
 
     continous_line_buffer = ""
@@ -323,11 +326,19 @@ class VimJupyterShell(LoggingConfigurable):
         otherwise, call vim_display_manager.handle_continous() to deal with the
         display of imcomplete code.
         """
+        if self.client.is_alive is False:
+            self.vim_display_manager.open_window(kind="stdout")
+            self.handle_iopub()
+            self.vim_display_manager.handle_stdout("The kernel is not alive")
+            self.vim_display_manager.finish_stdout()
+            return
+
         self.continous_line_buffer += line + "\n"
         more, indent = self.check_complete(self.continous_line_buffer)
 
         if more:
-            self.vim_display_manager.handle_continous(self.continous_line_buffer)
+            self.vim_display_manager.handle_continous(
+                self.continous_line_buffer)
         else:
             code = self.continous_line_buffer
             self.continous_line_buffer = ""
@@ -336,7 +347,7 @@ class VimJupyterShell(LoggingConfigurable):
     # This is set from payloads in handle_execute_reply
     next_input = None
 
-    def run_cell(self, cell, store_history=True):
+    def run_cell(self, cell, name='', clear_display=True, store_history=True):
         """Run a complete IPython cell.
 
         Parameters
@@ -349,7 +360,9 @@ class VimJupyterShell(LoggingConfigurable):
           should be set to False.
         """
 
-        self.vim_display_manager.open_window(kind="stdout")
+        self.vim_display_manager.open_window(
+                kind="stdout", clear_display=clear_display)
+        self.vim_ipynb_formatter.clear_output(name)
         if (not cell) or cell.isspace():
             # pressing enter flushes any pending display
             self.handle_iopub()
@@ -377,7 +390,7 @@ class VimJupyterShell(LoggingConfigurable):
                 self.handle_input_request(msg_id, timeout=0.05)
             except Empty:
                 # display intermediate print statements, etc.
-                self.handle_iopub(msg_id)
+                self.handle_iopub(msg_id, name)
             except ZMQError as e:
                 # Carry on if polling was interrupted by a signal
                 if e.errno != errno.EINTR:
@@ -386,7 +399,7 @@ class VimJupyterShell(LoggingConfigurable):
         # after all of that is done, wait for the execute reply
         while self.client.is_alive():
             try:
-                self.handle_execute_reply(msg_id, timeout=0.05)
+                self.handle_execute_reply(msg_id, name, timeout=0.05)
             except Empty:
                 pass
             else:
@@ -398,11 +411,11 @@ class VimJupyterShell(LoggingConfigurable):
     # message handlers
     # -----------------
 
-    def handle_execute_reply(self, msg_id, timeout=None):
+    def handle_execute_reply(self, msg_id, name="", timeout=None):
         msg = self.client.shell_channel.get_msg(block=False, timeout=timeout)
         if msg["parent_header"].get("msg_id", None) == msg_id:
 
-            self.handle_iopub(msg_id)
+            self.handle_iopub(msg_id, name)
 
             content = msg["content"]
             status = content['status']
@@ -459,7 +472,7 @@ class VimJupyterShell(LoggingConfigurable):
             return from_here
 
 # need to redirect
-    def handle_iopub(self, msg_id=''):
+    def handle_iopub(self, msg_id='', name=""):
         """Process messages on the IOPub channel
 
            This method consumes and processes messages on the IOPub channel,
@@ -485,21 +498,27 @@ class VimJupyterShell(LoggingConfigurable):
 
             if self.include_output(sub_msg):
                 if msg_type == 'status':
-                    self._execution_state = sub_msg["content"]["execution_state"]
+                    self._execution_state = \
+                            sub_msg["content"]["execution_state"]
                 elif msg_type == 'stream':
                     if sub_msg["content"]["name"] == "stdout":
                         if self._pending_clearoutput:
                             clear_buffer()
                             self._pending_clearoutput = False
-                        output_prompt("\nOut[{}]: ".format(self.execution_count))
+                        output_prompt(
+                                "\nOut[{}]: ".format(self.execution_count))
                         output_handler(
                             sub_msg["content"]["text"])
+                        self.vim_ipynb_formatter.embed_output(
+                                name, sub_msg)
                     elif sub_msg["content"]["name"] == "stderr":
                         if self._pending_clearoutput:
                             clear_buffer()
                             self._pending_clearoutput = False
                         output_handler(
                             sub_msg["content"]["text"])
+                        self.vim_ipynb_formatter.embed_output(
+                                name, sub_msg)
 
                 elif msg_type == 'execute_result':
                     if self._pending_clearoutput:
@@ -507,6 +526,8 @@ class VimJupyterShell(LoggingConfigurable):
                         self._pending_clearoutput = False
                     self.execution_count = int(
                         sub_msg["content"]["execution_count"])
+                    self.vim_ipynb_formatter.embed_output(
+                                name, sub_msg)
                     output_prompt("\nOut[{}]: ".format(self.execution_count))
 
                     if not self.from_here(sub_msg):
@@ -525,10 +546,11 @@ class VimJupyterShell(LoggingConfigurable):
                         output_handler()
                     output_handler(text_repr)
 
-
                 elif msg_type == 'display_data':
                     data = sub_msg["content"]["data"]
                     handled = self.handle_rich_data(data)
+                    self.vim_ipynb_formatter.embed_output(
+                                          name, sub_msg)
                     if not handled:
                         if not self.from_here(sub_msg):
                             output_handler(
@@ -553,11 +575,13 @@ class VimJupyterShell(LoggingConfigurable):
                         self._pending_clearoutput = True
                     else:
                         clear_buffer()
+                        self.vim_ipynb_formatter.clear_output()
 
                 elif msg_type == 'error':
                     for frame in sub_msg["content"]["traceback"]:
                         output_handler(frame)
-
+                    self.vim_ipynb_formatter.embed_output(
+                                            name, sub_msg)
 
     _imagemime = {
         'image/png': 'png',
@@ -618,7 +642,8 @@ class VimJupyterShell(LoggingConfigurable):
         res = self.callable_image_handler(data)
 
         if res is not False:
-            # If handler func returns e.g. None, assume it has handled the data.
+            # If handler func returns e.g. None,
+            # assume it has handled the data.
             res = True
         return res
 

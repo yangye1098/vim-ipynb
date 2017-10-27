@@ -30,7 +30,6 @@ from jupyter_client.session import Session
 
 from jupyter_client.localinterfaces import localhost
 
-sys.path.append("/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/")
 
 from vimjupytershell import VimJupyterShell
 from _version import __version__
@@ -114,10 +113,14 @@ class VimJupyter(ConnectionFileMixin):
         the *full path* to the connection file, never just its name.
         """
         if self.existing:
+            self.shell_port = 0
+            self.iopub_port = 0
+            self.stdin_port = 0
+            self.hb_port = 0
             try:
                 cf = find_connection_file(
                     self.existing, ['.', self.runtime_dir])
-            except Exception:
+            except IOError:
                 self.log.critical("Could not find existing \
                                   kernel connection file %s", self.existing)
 
@@ -191,7 +194,7 @@ class VimJupyter(ConnectionFileMixin):
         self.ip = localhost()
         try:
             newports = tunnel_to_kernel(info, self.sshserver, self.sshkey)
-        except:
+        except IOError:
             # even catch KeyboardInterrupt
             self.log.error("Could not setup tunnels", exc_info=True)
             self.exit(1)

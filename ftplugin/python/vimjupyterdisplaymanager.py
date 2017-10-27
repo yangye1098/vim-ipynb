@@ -26,21 +26,18 @@ class VimJupterDisplayManager():
     def __init__(self):
         pass
 
-    def open_window(self, kind="stdout"):
+    def open_window(self, kind="stdout", clear_display=True):
         """ Open window to interact with user.
 
         """
         self.buffer_name = vim.current.buffer.name
         self.w_origin_ID = vim.eval("win_getid()")
         if kind == "stdout":
-            self.open_stdout_window()
+            self.open_stdout_window(clear_display)
 
-    def open_stdout_window(self, ratio=None, wdir=None):
-        if ratio is None:
-            ratio = self.stdout_ratio
-
-        if wdir is None:
-            wdir = self.stdout_dir
+    def open_stdout_window(self, clear_display=True):
+        ratio = self.stdout_ratio
+        wdir = self.stdout_dir
 
         self.stdout_buffer_name = self.buffer_name + "-Vim-Jupyter-Output"
         height = vim.current.window.height/ratio
@@ -69,8 +66,10 @@ class VimJupterDisplayManager():
                 vim.command("AnsiEsc")
                 self.ansiesc_on = True
         self.stdout_buffer = vim.current.buffer
-        self.clear_stdout_buffer()
-        self.stdout_last_row = vim.current.window.cursor[0] - 1
+        if clear_display:
+            self.clear_stdout_buffer()
+            self.stdout_last_row = vim.current.window.cursor[0] - 1
+            print(self.stdout_last_row)
 
     def close_stdout_window(self):
         stdout_id = self.bufwinid(self.stdout_buffer_name)
@@ -110,6 +109,8 @@ class VimJupterDisplayManager():
 
     def finish_stdout(self):
         cmd = "set readonly nomodifiable"
+        if self.stdout_last_row == 0:
+            self.handle_stdout("<No Output>")
         vim.command(cmd)
         self.win_gotoid(self.w_origin_ID)
 
