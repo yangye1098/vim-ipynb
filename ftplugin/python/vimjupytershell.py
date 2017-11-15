@@ -342,7 +342,7 @@ class VimJupyterShell(LoggingConfigurable):
         else:
             code = self.continous_line_buffer
             self.continous_line_buffer = ""
-            self.run_cell(code, store_history)
+            self.run_cell(code, store_history=store_history)
 
     # This is set from payloads in handle_execute_reply
     next_input = None

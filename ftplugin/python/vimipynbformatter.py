@@ -36,15 +36,14 @@ class VimIpynbFormatter():
             nbformat.write(self.vim_ipynb_nb, cf)
 
     def to_markdown(self):
-        cb_name = self.nb_buffer.name
-        markdown_name = cb_name.split('.')(0) + ".md"
+        cb_name = self.nb_buffer.name.split('/')[-1]
+        markdown_name = cb_name.split('.')[0] + ".md"
         self.update_from_buffer()
-        markdown_cell_pattern = re.compile(r'^#%%(?:(.*?)$|(.*?)\s(.*?)$)')
 
         with open(markdown_name, "w") as mf:
             for line in self.nb_buffer:
-                if markdown_cell_pattern.match(line) is None:
-                    mf.write(line)
+                if line[0:3] != "#%%":
+                    mf.write(line + '\n')
 
     def embed_output(self, name, msg):
         if name == '':
@@ -94,9 +93,9 @@ class VimIpynbFormatter():
             cell = self.vim_ipynb_nb.cells[n]
             if cell["cell_type"] == "code":
                 n_code += 1
-                name = " code" + str(n_code)
+                name = "code" + str(n_code)
                 last_row = self.buffer_append(
-                    last_row, "\n```" + self.kernel_language + name)
+                    last_row, "\n```"+self.kernel_language+' '+name)
                 last_row = self.buffer_append(
                     last_row, cell["source"] + "\n```")
 

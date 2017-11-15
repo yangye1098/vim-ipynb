@@ -10,6 +10,8 @@ end
 pyx << EOF
 import sys
 import vim
+import logging
+logging.basicConfig(level=logging.DEBUG)
 vim_jupyter_path = "/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *

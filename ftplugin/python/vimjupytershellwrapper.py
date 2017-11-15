@@ -58,7 +58,9 @@ class VimJupyterShellWrapper():
     def run_cell(self, arg=""):
         code = ""
         pos = vim.current.window.cursor
-        row_begin = search("^```"+self.shell.kernel_language+"\\s"+arg, "c")
+        row_begin = search("^```"
+                           + self.shell.vim_ipynb_formatter.kernel_language
+                           + r"\s"+arg+r"[\s\n]", "c")
         if row_begin == 0:
             vim.command("echo \"Cannot find a code cell named " + arg + "\"")
             return

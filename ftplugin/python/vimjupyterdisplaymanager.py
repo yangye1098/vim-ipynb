@@ -69,7 +69,6 @@ class VimJupterDisplayManager():
         if clear_display:
             self.clear_stdout_buffer()
             self.stdout_last_row = vim.current.window.cursor[0] - 1
-            print(self.stdout_last_row)
 
     def close_stdout_window(self):
         stdout_id = self.bufwinid(self.stdout_buffer_name)
