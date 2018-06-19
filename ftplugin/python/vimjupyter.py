@@ -20,7 +20,6 @@ from traitlets import (
 from jupyter_core.paths import jupyter_runtime_dir
 
 from jupyter_client.blocking import BlockingKernelClient
-from jupyter_client.restarter import KernelRestarter
 from jupyter_client import (
     KernelManager, tunnel_to_kernel, find_connection_file, connect
 )
@@ -41,7 +40,7 @@ ConnectionFileMixin = connect.ConnectionFileMixin
 # Classes
 # -----------------------------------------------------------------------------
 
-classes = [KernelManager, KernelRestarter, Session]
+classes = [KernelManager, Session]
 
 
 class VimJupyter(ConnectionFileMixin):
@@ -57,7 +56,6 @@ class VimJupyter(ConnectionFileMixin):
         This plugin supports almost every functions as a Jupyter console
         application such as connecting to an existing ipython session, via:
 
-            jupyter console --existing
                     ......
 
         where the previous session could have been created by another ipython

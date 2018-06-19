@@ -17,8 +17,8 @@ class VimJupyterShellWrapper():
 
     def in_cell(self, pos):
         cursor(pos[0], pos[1])
-        row_finish = search("^```\\s*$", "cW")
-        row_begin = search("^```\\w+", "bcW")
+        row_finish = search(r"^```\s*$", "cW")
+        row_begin = search(r"^```\w\+", "bcW")
         cursor(pos[0], pos[1])
         if row_finish <= pos[0] or row_begin >= pos[0]:
             vim.command("echo \"Not inside a code cell\"")
@@ -36,8 +36,8 @@ class VimJupyterShellWrapper():
     def run_cell_under_cursor(self, down=False):
         pos = vim.current.window.cursor
         cursor(pos)
-        row_finish = search("^```\\s*$", "cW")
-        row_begin = search("^```\\w\+", "bcW")
+        row_finish = search(r"^```\s*$", "cW")
+        row_begin = search(r"^```\w\+", "bcW")
         code = ""
 
         if self.in_cell(pos) is False:
@@ -51,7 +51,7 @@ class VimJupyterShellWrapper():
         else:
             cursor(row_finish-1, pos[1])
 
-        name = re.match(r'^```.*?\s+(.*?)[\s$]',
+        name = re.match(r"^```.*?\s+(.*?)[\s$]",
                         vim.current.buffer[row_begin-1] + '\n').group(1)
         self.shell.run_cell(code, name, store_history=True)
 
@@ -64,7 +64,7 @@ class VimJupyterShellWrapper():
         if row_begin == 0:
             vim.command("echo \"Cannot find a code cell named " + arg + "\"")
             return
-        row_finish = search("^```\\s*$", "cW")
+        row_finish = search(r"^```\s*$", "cW")
         cell = vim.current.buffer[row_begin: row_finish-1]
         for line in cell:
             code += line + "\n"

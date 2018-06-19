@@ -41,8 +41,8 @@ command! -nargs=0 KernelShutdown          :pythonx vim_jupyter_wrapper[vim.curre
 command! -nargs=0 KernelRestart           :pythonx vim_jupyter_wrapper[vim.current.buffer.name].restart()
 command! -nargs=0 RunAll                  :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_all()
 command! -nargs=0 RunLine                 :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_line()
-command! -nargs=1 RunCell                 :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell(arg="<args>")<Space>
-command! -nargs=0 RunCurrentCell          :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell_under_cursor(down=False)<CR>
+command! -nargs=1 RunCell                 :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell(arg="<args>")
+command! -nargs=0 RunCurrentCell          :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell_under_cursor(down=False)
 command! -nargs=0 RunCurrentCellDown      :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell_under_cursor(down=True)
 command! -nargs=1 PrintVariable           :pythonx vim_jupyter_wrapper[vim.current.buffer.name].print_variable(arg="<args>")
 command! -nargs=0 PrintUnderCursor        :pythonx vim_jupyter_wrapper[vim.current.buffer.name].print_variable(arg="")
