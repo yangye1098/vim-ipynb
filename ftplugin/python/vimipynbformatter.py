@@ -116,7 +116,7 @@ class VimIpynbFormatter():
             self.vim_ipynb_nb = self.new_notebook()
 
     def update_from_buffer(self):
-        if shell is not None:
+        if self.shell is not None:
             self.update_notebook_info()
             self.cells_from_buffer()
             self.vim_ipynb_nb.cells = []
