@@ -23,10 +23,10 @@ au BufDelete *.ipynb pythonx clean_up(vim.current.buffer.name)
 au VimLeave * pythonx clean_all()
 
 
-command! -nargs=0 FromIpynb               :pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
+command! -nargs=0 ConvertIpynb            :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_buffer()
 command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 command! -nargs=0 ToMarkdown              :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_markdown()
-command! -nargs=0 StartKernel             :pythonx change_kernel(vim.current.buffer.name)
+command! -nargs=1 StartKernel             :pythonx start_kernel(vim.current.buffer.name, kernel_name="<args>")
 command! -nargs=1 ConnectToKernel         :pythonx change_kernel(vim.current.buffer.name, existing="<args>")
 command! -nargs=0 ConnectToPreviousKernel :pythonx change_kernel(vim.current.buffer.name, existing="kernel-*.json")
 command! -nargs=0 KernelShutdown          :pythonx vim_jupyter_wrapper[vim.current.buffer.name].shutdown_verbose()
@@ -47,7 +47,7 @@ noremap  <Plug>(FromIpynb)               :FromIpynb<CR>
 noremap  <Plug>(ToIpynb)                 :ToIpynb<CR>
 noremap  <Plug>(ConnectToPreviousKernel) :ConnectToPreviousKernel<CR>
 noremap  <Plug>(ConnectToKernel)         :ConnectToKernel<Space>
-noremap  <Plug>(StartKernel)             :StartKernel<CR>
+noremap  <Plug>(StartKernel)             :StartKernel<Space>
 noremap  <Plug>(KernelShutdown)          :KernelShutdown<CR>
 noremap  <Plug>(KernelRestart)           :KernelRestart<CR>
 noremap  <Plug>(RunCell)                 :RunCell<Space>
