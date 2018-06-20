@@ -220,7 +220,7 @@ class VimIpynbFormatter():
 
     def get_kernel_name(self):
         if self.kernel_language:
-            return kernel_spec[self.kernel_language]["name"]
+            return kernel_specs[self.kernel_language]["name"]
         else:
             return ""
 
