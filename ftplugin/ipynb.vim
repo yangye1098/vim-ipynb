@@ -75,7 +75,6 @@ map <buffer><localleader>hn             <Plug>(GetDoc)
 
 
 
-let g:ipynb_convert_on_start = 1
 
 if g:ipynb_convert_on_start == 1
     pythonx vim_jupyter_formatter[vim.current.buffer.name].to_buffer()

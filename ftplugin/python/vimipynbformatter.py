@@ -13,6 +13,7 @@ import re
 
 
 class VimIpynbFormatter():
+    buffer_formatted = False
     vim_ipynb_nb = None
     vim_ipynb_cells = OrderedDict()
     # each formatter is in charge of one buffer
@@ -26,9 +27,9 @@ class VimIpynbFormatter():
         pass
 
     def assign_shell(self, shell):
-        self.shell = shell
-        self._get_kernel_specs()
-        self.update_from_buffer()
+            self.shell = shell
+            self._get_kernel_specs()
+            self.update_from_buffer()
 
     # format methods
 
@@ -71,6 +72,7 @@ class VimIpynbFormatter():
     # update methods
 
     def to_buffer(self):
+        self.buffer_formatted = True
         self.nb_buffer[:] = None
         last_row = 0
         n_code = 0
@@ -118,19 +120,22 @@ class VimIpynbFormatter():
     def update_from_buffer(self):
         if self.shell is not None:
             self.update_notebook_info()
-            self.cells_from_buffer()
-            self.vim_ipynb_nb.cells = []
-            for cell in self.vim_ipynb_cells:
-                self.vim_ipynb_nb.cells.append(self.vim_ipynb_cells[cell])
+            if self.buffer_formatted:
+                self.cells_from_buffer()
+                self.vim_ipynb_nb.cells = []
+                for cell in self.vim_ipynb_cells:
+                    self.vim_ipynb_nb.cells.append(self.vim_ipynb_cells[cell])
         else:
-            print("No running kernel. Please start one using \
-                    :StartKernel(<kernel_name>)")
+            vim.command("echo \"No running kernel. Please start one using \
+                    :StartKernel(<kernel_name>)\" ")
 
     def new_notebook(self):
         self.vim_ipynb_nb = nbformat.v4.new_notebook()
         self.update_notebook_info()
 
     def cells_from_buffer(self):
+        if not self.buffer_formatted:
+            return
         in_code = False
         new_cells = OrderedDict()
         name = None
