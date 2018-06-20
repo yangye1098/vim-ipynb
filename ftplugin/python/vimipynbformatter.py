@@ -27,7 +27,7 @@ class VimIpynbFormatter():
 
     def assign_shell(self, shell):
         self.shell = shell
-        self.get_kernel_specs()
+        self._get_kernel_specs()
         self.update_from_buffer()
 
     # format methods
