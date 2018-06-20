@@ -29,7 +29,7 @@ def launch(name, existing=""):
     vim_jupyter_formatter[name].read_ipynb() 
     start_kernel(name, vim_jupyter_formatter[name].get_kernel_name())
 
-def start_kernel(name, kernel_name)
+def start_kernel(name, kernel_name):
     global vim_jupyter
     global vim_jupyter_shell
     global vim_jupyter_client
