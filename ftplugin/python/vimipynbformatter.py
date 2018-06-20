@@ -136,7 +136,7 @@ class VimIpynbFormatter():
         name = None
         nrow = len(self.nb_buffer)
         code_cell_start_pattern = \
-            re.compile(r'^```(?:' + kernel_language +
+            re.compile(r'^```(?:' + self.kernel_language +
                        ')\s(?:(.*?)$|(.*?)\s(.*?)$)')
         code_cell_stop_pattern = re.compile(r'^```\s*$')
         markdown_cell_pattern = re.compile(r'^#%%(?:(.*?)$|(.*?)\s(.*?)$)')
