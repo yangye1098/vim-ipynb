@@ -93,7 +93,7 @@ class VimJupyter(ConnectionFileMixin):
 
     existing = ""
     # The name of the default kernel to start.
-    kernel_name = 'python'
+    kernel_name = ""
 
     def init_connection_file(self):
         """find the connection file, and load the info if found.
@@ -294,6 +294,9 @@ class VimJupyter(ConnectionFileMixin):
             client=self.kernel_client
         )
         self.shell.own_kernel = not self.existing
+
+    def set_kernel_name(self, kernel_name="python"):
+        self.kernel_name = kernel_name
 
     def initialize(self, existing="", argv=None):
 
