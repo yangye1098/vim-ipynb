@@ -12,7 +12,7 @@ vim_jupyter_wrapper = dict()
 vim_jupyter_kernel_manager = dict()
 
 
-def launch(name, existing=""):
+def launch(name, kernel_name, existing=""):
     global vim_jupyter
     global vim_jupyter_shell
     global vim_jupyter_client
@@ -22,7 +22,7 @@ def launch(name, existing=""):
     # only launch once, reconnetiong is dealt in other functions
     if name in vim_jupyter:
         return
-    vim_jupyter[name] = VimJupyter()
+    vim_jupyter[name] = VimJupyter(kernel_name)
     vim_jupyter[name].initialize(existing=existing)
     vim_jupyter_shell[name] = vim_jupyter[name].shell
     vim_jupyter_client[name] = vim_jupyter[name].kernel_client

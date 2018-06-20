@@ -51,7 +51,7 @@ class VimJupyter(ConnectionFileMixin):
     description = """
         The Vim plugin as a Jupyter application.
 
-        This launches an Jupyter application inside a Vim.
+        This launches a Jupyter application per Vim buffer.
 
         This plugin supports almost every functions as a Jupyter console
         application such as connecting to an existing ipython session, via:

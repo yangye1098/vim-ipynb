@@ -1,4 +1,4 @@
-""" For format .ipynb notebook
+""" For extract info from and format .ipynb notebook
 
 """
 from collections import OrderedDict
@@ -6,7 +6,7 @@ from nbformat.v4 import (
     nbformat as current_nbformat,
     nbformat_minor as current_nbformat_minor
 )
-
+from jupyter_client import kernelspec
 import vim
 import nbformat
 import re
@@ -20,14 +20,22 @@ class VimIpynbFormatter():
     kernel_info = {}
     shell = None
     kernel_language = ""
-    language_supported = ["python"]
-    language_pattern = ""
-    for language in language_supported:
-        language_pattern += language + '|'
-    language_pattern = language_pattern.rstrip('|')
+    kernel_specs = []
+    language_pattern = r""
 
     def __init__(self, shell=None, ):
         self.shell = shell
+        self.find_available_kernels()
+
+    def find_available_kernels():
+        kernels = kernelspec.find_kernel_specs()
+        for name in kernels:
+            self.kernel_specs.append(kernelspec.get_kernel_spec(name))
+
+    def get_language_pattern():
+        for kernel in kernel_specs:
+            self.language_pattern += (kernel.language + '|')
+        self.language_pattern.rstrip('|')
 
     def to_ipynb(self):
         self.update_from_buffer()
@@ -137,7 +145,7 @@ class VimIpynbFormatter():
         new_cells = OrderedDict()
         name = None
         nrow = len(self.nb_buffer)
-        language_pattern = r"python"
+        language_pattern = self.get_language_pattern()
         code_cell_start_pattern = \
             re.compile(r'^```(?:' + language_pattern +
                        ')\s(?:(.*?)$|(.*?)\s(.*?)$)')

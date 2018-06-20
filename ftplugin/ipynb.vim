@@ -1,4 +1,5 @@
 
+
 if !has('pythonx')
     " exit if python3 is not available.
     " XXX: raise an error message here
@@ -10,7 +11,7 @@ end
 pyx << EOF
 import sys
 import vim
-vim_jupyter_path = "/home/eric/.vim/myplugin/vim-ipynb/ftplugin/python/"
+vim_jupyter_path = "/home/yangye/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
 launch(vim.current.buffer.name)
@@ -20,15 +21,6 @@ EOF
 au BufWritePost *.ipynb pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 au BufDelete *.ipynb pythonx clean_up(vim.current.buffer.name)
 au VimLeave * pythonx clean_all()
-
-
-
-function! ShutDownAllKernels()
-pythonx << EOF
-for buffer_name in vim_jupyter_wrapper:
-    vim_jupyter_wrapper[buffer_name].shutdown_silent()
-EOF
-endfunction
 
 
 command! -nargs=0 FromIpynb               :pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
@@ -81,9 +73,18 @@ map <buffer><localleader>h              <Plug>(GetDocUnderCursor)
 map <buffer><localleader>hn             <Plug>(GetDoc)   
 
 
+
+
 let g:ipynb_convert_on_start = 1
 
 if g:ipynb_convert_on_start == 1
     pythonx vim_jupyter_formatter[vim.current.buffer.name].from_ipynb()
 endif
+
+
+
+
+
+
+
 
