@@ -232,7 +232,7 @@ class VimIpynbFormatter():
                 self.shell.kernel_info["language_info"]
             self.kernel_language = \
                 self.shell.kernel_info["language_info"]["name"]
-            self.vim_ipynb_nb.["kernelspec"] = \
+            self.vim_ipynb_nb.metadata["kernelspec"] = \
                 self.kernel_specs[self.kernel_language]
 
     def _get_kernel_specs(self):
