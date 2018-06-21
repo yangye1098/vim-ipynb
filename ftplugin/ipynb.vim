@@ -76,7 +76,7 @@ map <buffer><localleader>hn             <Plug>(GetDoc)
 
 
 
-if !exist("g:ipynb_convert_on_start")
+if !exists("g:ipynb_convert_on_start")
     let g:ipynb_convert_on_start=1
 endif
 
