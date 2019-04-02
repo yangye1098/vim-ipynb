@@ -26,7 +26,7 @@ au VimLeave * pythonx clean_all()
 command! -nargs=0 ConvertIpynb            :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_buffer()
 command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 command! -nargs=0 ToMarkdown              :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_markdown()
-command! -nargs=0 KernelInfo              :pythonx print_kernel_info();
+command! -nargs=0 KernelInfo              :pythonx print_kernel_info(vim.current.buffer.name);
 command! -nargs=1 StartKernel             :pythonx start_kernel(vim.current.buffer.name, kernel_name="<args>")
 command! -nargs=1 ConnectToKernel         :pythonx change_kernel(vim.current.buffer.name, existing="<args>")
 command! -nargs=0 ConnectToPreviousKernel :pythonx change_kernel(vim.current.buffer.name, existing="kernel-*.json")
