@@ -107,15 +107,19 @@ class VimIpynbFormatter():
                 try:
                     self.vim_ipynb_nb = nbformat.read(
                         cf, as_version=current_nbformat)
-                    self.kernel_language = self.vim_ipynb_nb[
+                    try:
+                        self.kernel_language = self.vim_ipynb_nb[
                             "metadata"]["language_info"]["name"]
+                    except:
+                        # language_info is missing, set to default 
+                        self.kernel_language = "python"
                     self._get_kernel_specs()
                 except nbformat.reader.NotJSONError:
                     raise
                 finally:
                     pass
         except FileNotFoundError:
-            self.vim_ipynb_nb = self.new_notebook()
+            self.vim_ipynb_nb = nbformat.v4.new_notebook()
 
     def update_from_buffer(self):
         if self.shell is not None:
@@ -126,8 +130,7 @@ class VimIpynbFormatter():
                 for cell in self.vim_ipynb_cells:
                     self.vim_ipynb_nb.cells.append(self.vim_ipynb_cells[cell])
         else:
-            vim.command("echo \"No running kernel. Please start one using \
-                    :StartKernel(<kernel_name>)\" ")
+            vim.command("echo \"No running kernel. Please start one using :StartKernel(<kernel_name>)\" ")
 
     def new_notebook(self):
         self.vim_ipynb_nb = nbformat.v4.new_notebook()
@@ -228,6 +231,11 @@ class VimIpynbFormatter():
             return self.kernel_specs[self.kernel_language]["name"]
         else:
             return ""
+
+    def get_kernel_info(self):
+        if self.shell is not None:
+            return self.shell.kernel_info
+
 
     def update_notebook_info(self):
         self.vim_ipynb_nb.nbformat = current_nbformat

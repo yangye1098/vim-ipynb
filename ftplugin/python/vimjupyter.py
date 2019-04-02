@@ -54,10 +54,7 @@ class VimJupyter(ConnectionFileMixin):
         This launches a Jupyter application per Vim buffer.
 
         This plugin supports almost every functions as a Jupyter console
-        application such as connecting to an existing ipython session, via:
-
-                    ......
-
+        application such as connecting to an existing ipython session,
         where the previous session could have been created by another ipython
         console, an ipython qtconsole, or by opening an ipython notebook.
 
@@ -333,8 +330,3 @@ class VimJupyter(ConnectionFileMixin):
             # so that the interact loop advances, and prompt is redrawn, etc.
             raise KeyboardInterrupt
 
-
-if __name__ == "__main__":
-    vim_jupyter = VimJupyter()
-    vim_jupyter.initialize()
-    vim_jupyter_shell = vim_jupyter.shell

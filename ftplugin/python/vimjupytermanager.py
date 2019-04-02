@@ -67,10 +67,12 @@ def setup(name, existing=""):
     vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
     vim_jupyter_wrapper[name] = VimJupyterShellWrapper(
         vim_jupyter_shell[name])
-    vim_jupyter_shell[name].vim_ipynb_formmater = \
-        vim_jupyter_formatter[name]
     vim_jupyter_formatter[name].assign_shell(vim_jupyter_shell[name])
+    vim_jupyter_shell[name].vim_ipynb_formatter = \
+        vim_jupyter_formatter[name]
 
+def print_kernel_info(name):
+    print(vim_jupyter_formatter[name].get_kernel_info())
 
 def clean_up(name):
     if name in vim_jupyter:

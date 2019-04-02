@@ -26,6 +26,14 @@ class VimJupterDisplayManager():
     def __init__(self):
         pass
 
+    def set_window_dir(self, wdir):
+        self.wdir = wdir
+
+    def set_window_ratio(self, ratio, kind="stdout"):
+        if kind == "stdout":
+            stdout_ratio = ratio
+
+
     def open_window(self, kind="stdout", clear_display=True):
         """ Open window to interact with user.
 
@@ -70,10 +78,12 @@ class VimJupterDisplayManager():
             self.clear_stdout_buffer()
             self.stdout_last_row = vim.current.window.cursor[0] - 1
 
-    def close_stdout_window(self):
-        stdout_id = self.bufwinid(self.stdout_buffer_name)
-        if stdout_id != -1:
-            self.win_gotoid(stdout_id)
+    def close_window(self, kind="stdout"):
+        if kind == "stdout":
+            window_id = self.bufwinid(self.stdout_buffer_name)
+
+        if window_id != -1:
+            self.win_gotoid(window_id)
         vim.command("q!")
 
     def handle_continous(self, lines=""):

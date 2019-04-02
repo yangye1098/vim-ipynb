@@ -40,21 +40,6 @@ class VimJupyterShell(LoggingConfigurable):
     _eventloop = None
     own_kernel = False  # Changed by ZMQTerminalIPythonApp
 
-    editing_mode = Unicode(
-        'emacs', config=True,
-        help="Shortcut style to use at the prompt. 'vi' or 'emacs'.",
-    )
-
-    highlighting_style = Unicode(
-        '', config=True,
-        help="The name of a Pygments style to use for syntax highlighting"
-    )
-
-    highlighting_style_overrides = Dict(
-        config=True,
-        help="Override highlighting format for specific tokens"
-    )
-
     true_color = Bool(
         False, config=True,
         help=("Use 24bit colors instead of 256 colors in prompt highlighting. "
@@ -235,10 +220,9 @@ class VimJupyterShell(LoggingConfigurable):
         if self.manager is not None:
             self.manager.restart_kernel()
             self.vim_display_manager.handle_stdout("Kernel restart!")
-            self.vim_display_manager.finish_stdout()
         else:
             self.vim_display_manager.handle_stdout("Not own a kernel!")
-            self.vim_display_manager.finish_stdout()
+        self.vim_display_manager.finish_stdout()
 
     def ask_shutdown(self, silent=True):
         if silent is False:
@@ -664,7 +648,6 @@ class VimJupyterShell(LoggingConfigurable):
                 raise KeyboardInterrupt
             signal.signal(signal.SIGINT, double_int)
             content = req['content']
-            self.vim_display_manager.open_window(kind="stdin")
             if content.get('password', False):
                 read = self.vim_display_manager.handle_password
             else:
@@ -679,7 +662,6 @@ class VimJupyterShell(LoggingConfigurable):
                 return
             finally:
                 # restore SIGINT handler
-                self.vim_display_manager.close_stdin_window()
                 signal.signal(signal.SIGINT, real_handler)
             # only send stdin reply if there *was not* another request
             # or execution finished while we were reading.
