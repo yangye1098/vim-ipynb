@@ -20,14 +20,13 @@ EOF
 
 au BufWritePost *.ipynb pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 au BufDelete *.ipynb pythonx clean_up(vim.current.buffer.name)
-au BufHidden *.ipynb pythonx vim_jupyter_shell[vim.current.buffer.name].vim_display_manager.close_window("stdout")
-" au BufWinLeave *.ipynb pythonx vim_jupyter_shell[vim.current.buffer.name].vim_display_manager.close_window("stdout")
 au VimLeave * pythonx clean_all()
 
 
 command! -nargs=0 ConvertIpynb            :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_buffer()
 command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 command! -nargs=0 ToMarkdown              :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_markdown()
+command! -nargs=0 KernelInfo              :pythonx print_kernel_info();
 command! -nargs=1 StartKernel             :pythonx start_kernel(vim.current.buffer.name, kernel_name="<args>")
 command! -nargs=1 ConnectToKernel         :pythonx change_kernel(vim.current.buffer.name, existing="<args>")
 command! -nargs=0 ConnectToPreviousKernel :pythonx change_kernel(vim.current.buffer.name, existing="kernel-*.json")
