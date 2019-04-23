@@ -232,11 +232,6 @@ class VimIpynbFormatter():
         else:
             return ""
 
-    def get_kernel_info(self):
-        if self.shell is not None:
-            return self.shell.kernel_info
-
-
     def update_notebook_info(self):
         self.vim_ipynb_nb.nbformat = current_nbformat
         self.vim_ipynb_nb.nbformat_minor = current_nbformat_minor

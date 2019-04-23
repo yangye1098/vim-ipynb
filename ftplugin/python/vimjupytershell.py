@@ -60,7 +60,7 @@ class VimJupyterShell(LoggingConfigurable):
     )
 
     kernel_timeout = Float(
-        60, config=True,
+        120, config=True,
         help="""Timeout for giving up on a kernel (in seconds).
 
         On first connect and restart, the console tests whether the
@@ -139,7 +139,7 @@ class VimJupyterShell(LoggingConfigurable):
         """
     )
     kernel_is_complete_timeout = Float(
-        1, config=True, help="""
+        60, config=True, help="""
         Timeout (in seconds) for giving up on a kernel's is_complete
         response.
 
@@ -195,6 +195,7 @@ class VimJupyterShell(LoggingConfigurable):
         tic = time.time()
         self.client.hb_channel.unpause()
         msg_id = self.client.kernel_info()
+        print()
         while True:
             try:
                 reply = self.client.get_shell_msg(timeout=1)

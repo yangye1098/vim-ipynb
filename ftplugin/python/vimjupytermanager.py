@@ -14,7 +14,7 @@ vim_jupyter_wrapper = dict()
 vim_jupyter_kernel_manager = dict()
 
 
-def launch(name, existing=""):
+def launch(name, existing="", kernel_name=""):
     global vim_jupyter
     global vim_jupyter_shell
     global vim_jupyter_client
@@ -26,8 +26,17 @@ def launch(name, existing=""):
         return
     vim_jupyter[name] = VimJupyter()
     vim_jupyter_formatter[name] = VimIpynbFormatter()
-    vim_jupyter_formatter[name].read_ipynb() 
-    start_kernel(name, vim_jupyter_formatter[name].get_kernel_name())
+    vim_jupyter_formatter[name].read_ipynb()
+    print(vim_jupyter_formatter[name].get_kernel_name())
+    print(kernel_name)
+    if vim_jupyter_formatter[name].get_kernel_name() is not None:
+        if kernel_name == "":
+            start_kernel(name, vim_jupyter_formatter[name].get_kernel_name())
+        else:
+            start_kernel(name, kernel_name)
+    else:
+        if kernel_name == "":
+            start_kernel(name, kernel_name)
 
 def start_kernel(name, kernel_name):
     global vim_jupyter
@@ -37,11 +46,12 @@ def start_kernel(name, kernel_name):
     global vim_jupyter_wrapper
     global vim_jupyter_formatter
     if name not in vim_jupyter:
-        launch(name)
+        launch(name, kernel_name = kernel_name)
     else:
-        if kernel_name:
-            vim_jupyter[name].set_kernel_name(kernel_name)
-            setup(name)
+        vim_jupyter_formatter[name].clear_all_output()
+        vim_jupyter[name].set_kernel_name(kernel_name)
+        print(kernel_name)
+        setup(name)
 
 def change_kernel(name, existing=""):
     global vim_jupyter_shell
@@ -61,6 +71,7 @@ def setup(name, existing=""):
     global vim_jupyter_kernel_manager
     global vim_jupyter_wrapper
     global vim_jupyter_formatter
+    # shuting down the old kernel is done inside initialize
     vim_jupyter[name].initialize(existing=existing)
     vim_jupyter_shell[name] = vim_jupyter[name].shell
     vim_jupyter_client[name] = vim_jupyter[name].kernel_client
@@ -71,8 +82,9 @@ def setup(name, existing=""):
     vim_jupyter_shell[name].vim_ipynb_formatter = \
         vim_jupyter_formatter[name]
 
-def print_kernel_info(name):
-    print(vim_jupyter_formatter[name].get_kernel_info())
+def print_kernel_name(name):
+    global vim_jupyter_formatter
+    #print(vim_jupyter_formatter[name].get_kernel_name())
 
 def clean_up(name):
     if name in vim_jupyter:
