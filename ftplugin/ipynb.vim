@@ -12,7 +12,7 @@ pyx << EOF
 import sys
 import vim
 vim_expand = vim.Function('expand')
-vim_jupyter_path = str(vim_expand('<sfile>:p:h')) + "/python"
+vim_jupyter_path = str(vim_expand('<sfile>:p:h'), 'utf-8') + "/python"
 print(vim_jupyter_path)
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
