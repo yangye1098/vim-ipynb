@@ -6,6 +6,7 @@ from vimjupyter import VimJupyter
 from vimjupytershellwrapper import VimJupyterShellWrapper
 from vimipynbformatter import VimIpynbFormatter
 
+
 vim_jupyter = dict()
 vim_jupyter_shell = dict()
 vim_jupyter_client = dict()
@@ -27,8 +28,8 @@ def launch(name, existing="", kernel_name=""):
     vim_jupyter[name] = VimJupyter()
     vim_jupyter_formatter[name] = VimIpynbFormatter()
     vim_jupyter_formatter[name].read_ipynb()
-    print(vim_jupyter_formatter[name].get_kernel_name())
-    print(kernel_name)
+    #print(vim_jupyter_formatter[name].get_kernel_name())
+    #print(kernel_name)
     if vim_jupyter_formatter[name].get_kernel_name() is not None:
         if kernel_name == "":
             start_kernel(name, vim_jupyter_formatter[name].get_kernel_name())
@@ -50,7 +51,7 @@ def start_kernel(name, kernel_name):
     else:
         vim_jupyter_formatter[name].clear_all_output()
         vim_jupyter[name].set_kernel_name(kernel_name)
-        print(kernel_name)
+        #print(kernel_name)
         setup(name)
 
 def change_kernel(name, existing=""):

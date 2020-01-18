@@ -303,7 +303,7 @@ class VimJupyter(ConnectionFileMixin):
         self.runtime_dir = jupyter_runtime_dir()
         if not self.existing:
             self.connection_file = self._new_connection_file()
-        print(self.connection_file)
+        #print(self.connection_file)
 
         if not os.path.isdir(self.runtime_dir):
             os.mkdir(self.runtime_dir)
@@ -313,7 +313,7 @@ class VimJupyter(ConnectionFileMixin):
             # first, shutdown the old kernel if own one
             self.kernel_manager.shutdown_kernel(restart=False)
 
-        print(self.kernel_name)
+        #print(self.kernel_name)
 
         self.init_connection_file()
         self.init_ssh()
