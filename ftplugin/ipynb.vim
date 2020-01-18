@@ -11,7 +11,8 @@ end
 pyx << EOF
 import sys
 import vim
-print(vim.eval('<sfile>:p'))
+vim_expand = vim.Function('expand')
+print(vim_expand('<sfile>:p'))
 vim_jupyter_path = "/home/yangye/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
