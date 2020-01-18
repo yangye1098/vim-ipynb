@@ -13,6 +13,7 @@ import sys
 import vim
 vim_expand = vim.Function('expand')
 vim_jupyter_path = str(vim_expand('<sfile>:p:h')) + "/python"
+print(vim_jupyter_path)
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
 launch(vim.current.buffer.name)
