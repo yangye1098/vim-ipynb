@@ -10,7 +10,9 @@ end
 
 pyx << EOF
 import sys
+import os
 import vim
+print(os.getcwd())
 vim_jupyter_path = "/home/yangye/.vim/myplugin/vim-ipynb/ftplugin/python/"
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
@@ -22,6 +24,8 @@ au BufWritePost *.ipynb pythonx vim_jupyter_formatter[vim.current.buffer.name].t
 au BufDelete *.ipynb pythonx clean_up(vim.current.buffer.name)
 au VimLeave * pythonx clean_all()
 
+
+" Wrap python function to vim command
 
 command! -nargs=0 ConvertIpynb            :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_buffer()
 command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
@@ -41,6 +45,7 @@ command! -nargs=1 PrintVariable           :pythonx vim_jupyter_wrapper[vim.curre
 command! -nargs=0 PrintUnderCursor        :pythonx vim_jupyter_wrapper[vim.current.buffer.name].print_variable(arg="")
 command! -nargs=1 GetDoc                  :pythonx vim_jupyter_wrapper[vim.current.buffer.name].get_doc(arg="<args>")
 command! -nargs=0 GetDocUnderCursor       :pythonx vim_jupyter_wrapper[vim.current.buffer.name].get_doc(arg="")
+
 
 
 
