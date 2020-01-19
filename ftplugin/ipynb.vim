@@ -78,8 +78,8 @@ map <buffer><localleader>pn             <Plug>(PrintVariable)
 map <buffer><localleader>h              <Plug>(GetDocUnderCursor)
 map <buffer><localleader>hn             <Plug>(GetDoc)   
 
-
-
+" turn off pandoc auto exec
+let g:pandoc#command#autoexec_on_writes = 0
 
 
 if !exists("g:ipynb_convert_on_start")
