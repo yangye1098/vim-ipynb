@@ -38,14 +38,17 @@ class VimIpynbFormatter():
         with open(self.nb_buffer.name, "w") as cf:
             nbformat.write(self.vim_ipynb_nb, cf)
 
-    def to_markdown(self):
+    def to_pandoc(self):
         cb_name = self.nb_buffer.name.split('/')[-1]
-        markdown_name = cb_name.split('.')[0] + ".md"
+        markdown_name = cb_name.split('.')[0] + ".pandoc"
         self.update_from_buffer()
         with open(markdown_name, "w") as mf:
             for line in self.nb_buffer:
-                if line[0:3] != "#%%":
-                    mf.write(line + '\n')
+                if self.match_marker(line, kind='markdown') is None:
+                    if self.match_marker(line, kind='code_begin'):
+                        mf.write("```" + self.kernel_language + '\n')
+                    else:
+                        mf.write(line + '\n')
 
     #output method
 
@@ -111,7 +114,7 @@ class VimIpynbFormatter():
                         self.kernel_language = self.vim_ipynb_nb[
                             "metadata"]["language_info"]["name"]
                     except:
-                        # language_info is missing, set to default 
+                        # language_info is missing, set to default
                         self.kernel_language = "python"
                     self._get_kernel_specs()
                 except nbformat.reader.NotJSONError:
@@ -143,15 +146,10 @@ class VimIpynbFormatter():
         new_cells = OrderedDict()
         name = None
         nrow = len(self.nb_buffer)
-        code_cell_start_pattern = \
-            re.compile(r'^```(?:' + self.kernel_language +
-                       ')\s(?:(.*?)$|(.*?)\s(.*?)$)')
-        code_cell_stop_pattern = re.compile(r'^```\s*$')
-        markdown_cell_pattern = re.compile(r'^#%%(?:(.*?)$|(.*?)\s(.*?)$)')
 
         for l in range(nrow):
             if not in_code:
-                matchObj = markdown_cell_pattern.match(self.nb_buffer[l])
+                matchObj = self.match_marker(self.nb_buffer[l], kind='markdown')
                 if matchObj:
                     self.trim_n(name, new_cells)
                     name = matchObj.group(1)
@@ -168,7 +166,7 @@ class VimIpynbFormatter():
                     except ValueError:
                         raise
                 else:
-                    matchObj = code_cell_start_pattern.match(self.nb_buffer[l])
+                    matchObj = self.match_marker(self.nb_buffer[l], kind='code_begin')
                     if matchObj:
                         self.trim_n(name, new_cells)
                         in_code = True
@@ -191,7 +189,7 @@ class VimIpynbFormatter():
                             new_cells[name]["source"] += (
                                     self.nb_buffer[l] + '\n')
             elif in_code:
-                matchObj = code_cell_stop_pattern.match(self.nb_buffer[l])
+                matchObj = self.match_marker(self.nb_buffer[l], kind='code_end')
                 if matchObj:
                     in_code = False
                 else:
@@ -200,6 +198,27 @@ class VimIpynbFormatter():
         self.vim_ipynb_cells = new_cells
 
     # utility methods
+
+    """
+    match markdown begin marker, code begin marker and code end marker.
+    kind = "markdown", "code_begin", or "code_end"
+    """
+    def match_marker(self, line, kind):
+        markdown_cell_pattern = re.compile(r'^#%%(?:(.*?)$|(.*?)\s(.*?)$)')
+        code_cell_begin_pattern = \
+            re.compile(r'^```(?:' + self.kernel_language +
+                       ')\s(?:(.*?)$|(.*?)\s(.*?)$)')
+        code_cell_stop_pattern = re.compile(r'^```\s*$')
+        if kind == 'markdown':
+            return markdown_cell_pattern.match(line)
+        elif kind == 'code_begin':
+            return code_cell_begin_pattern.match(line)
+        elif kind == 'code_end':
+            return code_cell_stop_pattern.match(line)
+        else:
+            raise ValueError
+
+
 
     def trim_n(self, name, cells):
         if name is not None:

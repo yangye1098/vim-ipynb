@@ -1,3 +1,10 @@
+"""
+vimjupytermanager is associated with one vim instance.
+Each time .ipynb is opened by vim, one vimjupytermanager is created for manage
+all vim-ipynb related classes.
+
+"""
+
 import sys
 
 from jupyter_client import kernelspec
@@ -14,7 +21,6 @@ vim_jupyter_formatter = dict()
 vim_jupyter_wrapper = dict()
 vim_jupyter_kernel_manager = dict()
 
-
 def launch(name, existing="", kernel_name=""):
     global vim_jupyter
     global vim_jupyter_shell
@@ -28,15 +34,13 @@ def launch(name, existing="", kernel_name=""):
     vim_jupyter[name] = VimJupyter()
     vim_jupyter_formatter[name] = VimIpynbFormatter()
     vim_jupyter_formatter[name].read_ipynb()
-    #print(vim_jupyter_formatter[name].get_kernel_name())
-    #print(kernel_name)
-    if vim_jupyter_formatter[name].get_kernel_name() is not None:
+    if vim_jupyter_formatter[name].get_kernel_name() != "":
         if kernel_name == "":
             start_kernel(name, vim_jupyter_formatter[name].get_kernel_name())
         else:
             start_kernel(name, kernel_name)
     else:
-        if kernel_name == "":
+        if kernel_name != "":
             start_kernel(name, kernel_name)
 
 def start_kernel(name, kernel_name):
@@ -89,12 +93,13 @@ def print_kernel_name(name):
 
 def clean_up(name):
     if name in vim_jupyter:
+        #if vim_jupyter_wrapper[name] is not None:
         vim_jupyter_wrapper[name].shutdown_silent()
         del vim_jupyter_wrapper[name]
-        del vim_jupyter_formatter[name]
-        del vim_jupyter_shell[name]
-        del vim_jupyter_client[name]
         del vim_jupyter_kernel_manager[name]
+        del vim_jupyter_client[name]
+        del vim_jupyter_shell[name]
+        del vim_jupyter_formatter[name]
         del vim_jupyter[name]
 
 
