@@ -23,13 +23,13 @@
 
 ## Markdown cell 
 
-> #%%<MardownCellName>
+    #%%<MardownCellName>
 
 ## Code cell
 
-> ```<KernelLanguage> <Cell Name>
-> some codes
-> ```
+    ```<KernelLanguage> <Cell Name>
+    some codes
+    ```
 
 
 # Usage
@@ -38,39 +38,43 @@
 
 After creating a new .ipynb file, a kernel must be explicitly started using 
 
-> :StartKernel <kernelname>
+    :StartKernel <kernelname>
 
 ## Kernel Related Commands
 
-> :StartKernel <kernelname> Start a kernel
-> :ConnectToKernel <jsonfile> Connect to an existing kernel specified by <jsonfile>
-> :ConnectToPreviousKernel Connect to a most recented created kernel 
-> :KernelShutdown Shutdown current kernel
-> :KernelRestart Restart current kernel 
+    :StartKernel <kernelname> Start a kernel
+    :ConnectToKernel <jsonfile> Connect to an existing kernel specified by <jsonfile>
+    :ConnectToPreviousKernel Connect to a most recented created kernel 
+    :KernelShutdown Shutdown current kernel
+    :KernelRestart Restart current kernel 
 
 ## Run Code Cells
 
 For running current code cell command, code can only be run when cursor is inside a code cell. 
 
-- space  Run current line 
-- <localleader>cc Run current cell 
-- <localleader>cd Run current cell and go to nex cell
-- <localleader>cn <n> Run number n cell
-- <localleader>r Run all code cells
+    space  Run current line 
+    <localleader>cc Run current cell 
+    <localleader>cd Run current cell and go to nex cell
+    <localleader>cn <n> Run number n cell
+    <localleader>r Run all code cells
 
 ## Other Commands
 
-- <localleader>p: print variable under cursor
-- <localleader>pn <var>: print variable <var>
-- <localleader>h: get help under cursor
-- <localleader>hn <name>: get help for <name>
+    <localleader>p: print variable under cursor
+    <localleader>pn <var>: print variable <var>
+    <localleader>h: get help under cursor
+    <localleader>hn <name>: get help for <name>
+
+## Convert Filetype Commands
+
+    :ToPandoc 
 
 
 # Configuration Option
 
 ## Open ipynb as raw ipynb json format 
 
-> let g:ipynb_convert_on_start=0
+    let g:ipynb_convert_on_start=0
 
 
 # Comment
