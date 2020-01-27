@@ -32,6 +32,7 @@ command! -nargs=0 ConvertIpynb            :pythonx vim_jupyter_formatter[vim.cur
 command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 command! -nargs=0 ToPandoc                :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_pandoc()
 command! -nargs=0 ToHtml                  :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_html()
+command! -nargs=0 ToMd                    :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_markdown()
 command! -nargs=0 Kernelname              :pythonx print_kernel_name(vim.current.buffer.name)
 command! -nargs=1 StartKernel             :pythonx start_kernel(vim.current.buffer.name, kernel_name="<args>")
 command! -nargs=1 ConnectToKernel         :pythonx change_kernel(vim.current.buffer.name, existing="<args>")
@@ -56,6 +57,7 @@ noremap  <Plug>(FromIpynb)               :FromIpynb<CR>
 noremap  <Plug>(ToIpynb)                 :ToIpynb<CR>
 noremap  <Plug>(ToPandoc)                :ToPandoc<CR>
 noremap  <Plug>(ToHtml)                  :ToHtml<CR>
+noremap  <Plug>(ToMd)                    :ToMd<CR>
 noremap  <Plug>(ConnectToPreviousKernel) :ConnectToPreviousKernel<CR>
 noremap  <Plug>(ConnectToKernel)         :ConnectToKernel<Space>
 noremap  <Plug>(StartKernel)             :StartKernel<Space>
