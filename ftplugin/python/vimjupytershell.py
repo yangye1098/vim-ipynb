@@ -305,6 +305,24 @@ class VimJupyterShell(LoggingConfigurable):
 
     continous_line_buffer = ""
 
+    def run_line_abort(self):
+        """
+        Clear the continous_line_buffer for starting over.
+        """
+
+        if self.client.is_alive is False:
+            self.vim_display_manager.open_window(kind="stdout")
+            self.handle_iopub()
+            self.vim_display_manager.handle_stdout("The kernel is not alive")
+            self.vim_display_manager.finish_stdout()
+            return
+
+        self.continous_line_buffer = ""
+        self.vim_display_manager.open_window(kind="stdout")
+        self.vim_display_manager.handle_stdout("Interrupt. Buffer has been cleared")
+        self.vim_display_manager.finish_stdout()
+
+
     def run_line(self, line, store_history=True):
         """ Check the completeness of the lines stored in
         continous_line_buffer. If the code is complete, run the whole code,

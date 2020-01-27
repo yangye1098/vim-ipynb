@@ -7,7 +7,9 @@ getline = vim.Function('getline')
 cursor = vim.Function('cursor')
 search = vim.Function('search')
 
-
+"""
+Class for handling get code for shell to send to kernel from vim buffer.
+"""
 class VimJupyterShellWrapper():
 
     shell = None
@@ -32,6 +34,10 @@ class VimJupyterShellWrapper():
         line = vim.current.buffer[pos[0]-1]
         self.shell.run_line(line, store_history=True)
         cursor(pos[0]+1, pos[1])
+
+    def run_line_abort(self):
+        self.shell.run_line_abort()
+        return
 
     def run_cell_under_cursor(self, down=False):
         pos = vim.current.window.cursor

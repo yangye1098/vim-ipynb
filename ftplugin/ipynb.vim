@@ -37,6 +37,7 @@ command! -nargs=0 KernelShutdown          :pythonx vim_jupyter_wrapper[vim.curre
 command! -nargs=0 KernelRestart           :pythonx vim_jupyter_wrapper[vim.current.buffer.name].restart()
 command! -nargs=0 RunAll                  :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_all()
 command! -nargs=0 RunLine                 :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_line()
+command! -nargs=0 RunLineAbort            :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_line_abort()
 command! -nargs=1 RunCell                 :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell(arg="<args>")
 command! -nargs=0 RunCurrentCell          :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell_under_cursor(down=False)
 command! -nargs=0 RunCurrentCellDown      :pythonx vim_jupyter_wrapper[vim.current.buffer.name].run_cell_under_cursor(down=True)
@@ -60,6 +61,7 @@ noremap  <Plug>(RunCell)                 :RunCell<Space>
 noremap  <Plug>(RunCurrentCell)          :RunCurrentCell<CR>
 noremap  <Plug>(RunCurrentCellDown)      :RunCurrentCellDown<CR>
 noremap  <Plug>(RunLine)                 :RunLine<CR>
+noremap  <Plug>(RunLineAbort)            :RunLineAbort<CR>
 noremap  <Plug>(RunAll)                  :RunAll<CR>
 noremap  <Plug>(PrintUnderCursor)        :PrintUnderCursor<CR>
 noremap  <Plug>(PrintVariable)           :PrintVariable<Space>
@@ -73,6 +75,7 @@ map <buffer><localleader>cc             <Plug>(RunCurrentCell)
 map <buffer><localleader>cd             <Plug>(RunCurrentCellDown)
 map <buffer><localleader>cn             <Plug>(RunCell)
 nmap <buffer><space>                    <Plug>(RunLine)
+nmap <buffer><localleader>a             <Plug>(RunLineAbort)
 map <buffer><localleader>p              <Plug>(PrintUnderCursor)
 map <buffer><localleader>pn             <Plug>(PrintVariable)
 map <buffer><localleader>h              <Plug>(GetDocUnderCursor)

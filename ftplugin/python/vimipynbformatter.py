@@ -11,6 +11,8 @@ import vim
 import nbformat
 import re
 
+import nbconvert
+
 
 class VimIpynbFormatter():
     buffer_formatted = False
@@ -49,6 +51,8 @@ class VimIpynbFormatter():
                         mf.write("```" + self.kernel_language + '\n')
                     else:
                         mf.write(line + '\n')
+    # def to_pdf(sefl):
+    #    nbconvert.
 
     #output method
 
