@@ -11,7 +11,11 @@ import vim
 import nbformat
 import re
 
-import nbconvert
+from nbconvert.exporters import (HTMLExporter, MarkdownExporter, PDFExporter,
+                                 PythonExporter)
+
+from nbconvert.writers import FilesWriter
+from traitlets.config import Config
 
 
 class VimIpynbFormatter():
@@ -24,14 +28,22 @@ class VimIpynbFormatter():
     shell = None
     kernel_language = ""
     kernel_specs = {}
+    writer = FilesWriter()
+    c = Config()
+    c.CSSHTMLHeaderPreprocessor.style = 'colorful'
+    c.LatexPreprocessor.style = 'colorful'
+
 
     def __init__(self):
         pass
 
     def assign_shell(self, shell):
-            self.shell = shell
-            self._get_kernel_specs()
-            self.update_from_buffer()
+        self.shell = shell
+        self._get_kernel_specs()
+        self.update_from_buffer()
+
+    def write_buffer(self):
+        vim.command(":write")
 
     # format methods
 
@@ -51,8 +63,34 @@ class VimIpynbFormatter():
                         mf.write("```" + self.kernel_language + '\n')
                     else:
                         mf.write(line + '\n')
-    # def to_pdf(sefl):
-    #    nbconvert.
+
+    def to_markdown(self):
+        cb_name = self.nb_buffer.name.split('/')[-1]
+        notebook_name = cb_name.split('.')[0]
+        self.write_buffer()
+        markdown_exporter = MarkdownExporter()
+        body, resources = markdown_exporter.from_filename(cb_name)
+        self.writer.write(body, resources, notebook_name = notebook_name)
+
+
+    def to_html(self):
+        cb_name = self.nb_buffer.name.split('/')[-1]
+        notebook_name = cb_name.split('.')[0]
+        self.write_buffer()
+        html_exporter = HTMLExporter(config=self.c)
+        html_exporter.template_file = 'full'
+        body, resources = html_exporter.from_filename(cb_name)
+        self.writer.write(body, resources, notebook_name = notebook_name)
+
+
+    def to_pdf(self):
+        cb_name = self.nb_buffer.name.split('/')[-1]
+        notebook_name = cb_name.split('.')[0]
+        self.write_buffer()
+        pdf_exporter = PDFExporter(config=self.c)
+        pdf_exporter.template_file = 'full'
+        body, resources = pdf_exporter.from_filename(cb_name)
+        self.writer.write(body, resources, notebook_name = notebook_name)
 
     #output method
 
@@ -249,6 +287,7 @@ class VimIpynbFormatter():
         self.nb_buffer.append(msg_list, last_row)
         return last_row + len(msg_list)
 
+
     def get_kernel_name(self):
         if self.kernel_language:
             return self.kernel_specs[self.kernel_language]["name"]
@@ -266,6 +305,9 @@ class VimIpynbFormatter():
             self.vim_ipynb_nb.metadata["kernelspec"] = \
                 self.kernel_specs[self.kernel_language]
 
+    """
+    Get all kernel specs installed
+    """
     def _get_kernel_specs(self):
         kernelspec_manager = kernelspec.KernelSpecManager()
         kernelspec_info = kernelspec_manager.get_all_specs()

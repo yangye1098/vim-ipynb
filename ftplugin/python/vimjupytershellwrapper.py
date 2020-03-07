@@ -13,9 +13,11 @@ Class for handling get code for shell to send to kernel from vim buffer.
 class VimJupyterShellWrapper():
 
     shell = None
+    vim_ipynb_formatter = None
 
     def __init__(self, shell):
         self.shell = shell
+        self.vim_ipynb_formatter = shell.vim_ipynb_formatter
 
     def in_cell(self, pos):
         cursor(pos[0], pos[1])
@@ -40,6 +42,7 @@ class VimJupyterShellWrapper():
         return
 
     def run_cell_under_cursor(self, down=False):
+        vim.command(":write")
         pos = vim.current.window.cursor
         cursor(pos)
         row_finish = search(r"^```\s*$", "cW")
@@ -65,7 +68,7 @@ class VimJupyterShellWrapper():
         code = ""
         pos = vim.current.window.cursor
         row_begin = search("^```"
-                           + self.shell.vim_ipynb_formatter.kernel_language
+                           + self.vim_ipynb_formatter.kernel_language
                            + r"\s"+arg+r"[\s\n]", "c")
         if row_begin == 0:
             vim.command("echo \"Cannot find a code cell named " + arg + "\"")
@@ -78,8 +81,8 @@ class VimJupyterShellWrapper():
         self.shell.run_cell(code, arg, store_history=True)
 
     def run_all(self):
-        self.shell.vim_ipynb_formatter.update_from_buffer()
-        cells = self.shell.vim_ipynb_formatter.vim_ipynb_cells
+        self.vim_ipynb_formatter.update_from_buffer()
+        cells = self.vim_ipynb_formatter.vim_ipynb_cells
         for name in cells:
             if cells[name]['cell_type'] == "code":
                 self.shell.run_cell(cells[name]['source'], name,

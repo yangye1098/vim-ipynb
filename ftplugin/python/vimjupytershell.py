@@ -123,6 +123,9 @@ class VimJupyterShell(LoggingConfigurable):
         """
     )
 
+    image_handler = 'stream'
+    stream_image_handler = ['feh', '--scale-down', '-B', 'white', '-' ]
+
     mime_preference = List(
         default_value=['image/png', 'image/jpeg', 'image/svg+xml'],
         config=True, help="""
@@ -195,7 +198,7 @@ class VimJupyterShell(LoggingConfigurable):
         tic = time.time()
         self.client.hb_channel.unpause()
         msg_id = self.client.kernel_info()
-        print()
+        # print()
         while True:
             try:
                 reply = self.client.get_shell_msg(timeout=1)
@@ -490,7 +493,7 @@ class VimJupyterShell(LoggingConfigurable):
 
         while self.client.iopub_channel.msg_ready():
             sub_msg = self.client.iopub_channel.get_msg()
-
+            # print(sub_msg)
             msg_type = sub_msg['header']['msg_type']
             # parent = sub_msg["parent_header"]
 
@@ -624,9 +627,14 @@ class VimJupyterShell(LoggingConfigurable):
         with open(os.devnull, 'w') as devnull:
             proc = subprocess.Popen(
                 args, stdin=subprocess.PIPE,
-                stdout=devnull, stderr=devnull)
-            proc.communicate(raw)
-        return (proc.returncode == 0)
+                stdout=None, stderr=None)
+            try:
+                proc.communicate(raw , timeout=0.5)
+            except :
+                pass
+
+        #return (proc.returncode == 0)
+        return True
 
     def handle_image_tempfile(self, data, mime):
         raw = base64.decodestring(data[mime].encode('ascii'))

@@ -81,11 +81,12 @@ def setup(name, existing=""):
     vim_jupyter_shell[name] = vim_jupyter[name].shell
     vim_jupyter_client[name] = vim_jupyter[name].kernel_client
     vim_jupyter_kernel_manager[name] = vim_jupyter[name].kernel_manager
-    vim_jupyter_wrapper[name] = VimJupyterShellWrapper(
-        vim_jupyter_shell[name])
     vim_jupyter_formatter[name].assign_shell(vim_jupyter_shell[name])
     vim_jupyter_shell[name].vim_ipynb_formatter = \
         vim_jupyter_formatter[name]
+
+    vim_jupyter_wrapper[name] = VimJupyterShellWrapper(
+        vim_jupyter_shell[name])
 
 def print_kernel_name(name):
     global vim_jupyter_formatter
