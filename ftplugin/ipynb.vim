@@ -33,6 +33,7 @@ command! -nargs=0 ToIpynb                 :pythonx vim_jupyter_formatter[vim.cur
 command! -nargs=0 ToPandoc                :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_pandoc()
 command! -nargs=0 ToHtml                  :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_html()
 command! -nargs=0 ToMd                    :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_markdown()
+command! -nargs=0 ToPdf                    :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_pdf()
 command! -nargs=0 ClearAll                :pythonx vim_jupyter_formatter[vim.current.buffer.name].clear_all_output()
 
 
