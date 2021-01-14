@@ -13,8 +13,7 @@ import sys
 import vim
 vim_expand = vim.Function('expand')
 
-vim_jupyter_path = "/home/yangye/.vim/myplugin/vim-ipynb/ftplugin/python"
-#vim_jupyter_path = str(vim_expand('<sfile>:p:h'), 'utf-8') + "/python"
+vim_jupyter_path = str(vim_expand('<sfile>:p:h'), 'utf-8') + "/python"
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
 launch(vim.current.buffer.name)
@@ -71,18 +70,21 @@ noremap  <Plug>(ConnectToKernel)         :ConnectToKernel<Space>
 noremap  <Plug>(StartKernel)             :StartKernel<Space>
 noremap  <Plug>(KernelShutdown)          :KernelShutdown<CR>
 noremap  <Plug>(KernelRestart)           :KernelRestart<CR>
+
 noremap  <Plug>(RunCell)                 :RunCell<Space>
 noremap  <Plug>(RunCurrentCell)          :RunCurrentCell<CR>
 noremap  <Plug>(RunCurrentCellDown)      :RunCurrentCellDown<CR>
 noremap  <Plug>(RunLine)                 :RunLine<CR>
 noremap  <Plug>(RunLineAbort)            :RunLineAbort<CR>
 noremap  <Plug>(RunAll)                  :RunAll<CR>
+
 noremap  <Plug>(PrintUnderCursor)        :PrintUnderCursor<CR>
 noremap  <Plug>(PrintVariable)           :PrintVariable<Space>
 noremap  <Plug>(GetDocUnderCursor)       :GetDocUnderCursor<CR>
 noremap  <Plug>(GetDoc)                  :GetDoc<Space>
 
 
+"keyboard shortcuts
 
 map <buffer><localleader>r              <Plug>(RunAll)
 map <buffer><localleader>cc             <Plug>(RunCurrentCell)
