@@ -11,12 +11,12 @@
 
 # Features
 
-1. Open and edit .ipynb files with corresponding backend kernel.
+1. Open and files with corresponding backend kernel and convert it into markdown-like text.
 2. Different kernels support (python and matlab for now).
 3. Syntax highlighting support through vim-pandoc-syntax.
-4. Creating markdown and code cells. 
-5. Running codes in code cells.
-6. Converting .ipynb files into pandoc-markdown pdf. (Todo)
+4. Create markdown and code cells. 
+5. Run codes in code cells.
+6. Convert .ipynb files into pandoc, markdown, html, pdf. 
 
 
 # Syntax 
