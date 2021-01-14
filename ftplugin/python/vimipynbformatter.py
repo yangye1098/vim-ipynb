@@ -88,7 +88,6 @@ class VimIpynbFormatter():
         notebook_name = cb_name.split('.')[0]
         self.write_buffer()
         pdf_exporter = PDFExporter(config=self.c)
-        pdf_exporter.template_file = 'full'
         body, resources = pdf_exporter.from_filename(cb_name)
         self.writer.write(body, resources, notebook_name = notebook_name)
 

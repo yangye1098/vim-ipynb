@@ -63,6 +63,7 @@ noremap  <Plug>(ToIpynb)                 :ToIpynb<CR>
 noremap  <Plug>(ToPandoc)                :ToPandoc<CR>
 noremap  <Plug>(ToHtml)                  :ToHtml<CR>
 noremap  <Plug>(ToMd)                    :ToMd<CR>
+noremap  <Plug>(ToPdf)                    :ToMd<CR>
 noremap  <Plug>(ClearAll)                :ClearAll<CR>
 
 noremap  <Plug>(ConnectToPreviousKernel) :ConnectToPreviousKernel<CR>
