@@ -27,7 +27,7 @@
 
 ## Code cell
 
-    ```<KernelLanguage> <Cell Name>
+    ```<KernelLanguage> <CellName>
     some codes
     ```
 
@@ -52,7 +52,8 @@ After creating a new .ipynb file, a kernel must be explicitly started using
 
 For running current code cell command, code can only be run when cursor is inside a code cell. 
 
-    space  Run current line 
+    <space>  Run current line 
+    <localleader>a Abort Run line buffer
     <localleader>cc Run current cell 
     <localleader>cd Run current cell and go to nex cell
     <localleader>cn <n> Run number n cell
@@ -65,9 +66,17 @@ For running current code cell command, code can only be run when cursor is insid
     <localleader>h: get help under cursor
     <localleader>hn <name>: get help for <name>
 
+
 ## Convert Filetype Commands
 
     :ToPandoc 
+    :ToHtml
+    :ToMd
+    :ToPdf
+
+## Output related Commands
+    :ClearAll Clear all output from code cells.
+    
 
 
 # Configuration Option
