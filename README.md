@@ -7,7 +7,7 @@
 # Requirement
 
 1. vim with python3 integrated
-2. vim-pandoc and vim-pandoc-syntax plugin for converting .ipynb files to  grammar support
+2. vim-pandoc and vim-pandoc-syntax plugin for converting .ipynb files and grammar support
 
 # Features
 
