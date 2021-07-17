@@ -106,6 +106,7 @@ class VimIpynbFormatter():
             for name in self.vim_ipynb_cells:
                 if self.vim_ipynb_cells[name]['cell_type'] == "code":
                     sf.write(self.vim_ipynb_cells[name]['source'])
+                    sf.write('\n\n')
 
 
 
