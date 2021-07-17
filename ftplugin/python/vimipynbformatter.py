@@ -91,6 +91,25 @@ class VimIpynbFormatter():
         body, resources = pdf_exporter.from_filename(cb_name)
         self.writer.write(body, resources, notebook_name = notebook_name)
 
+    def to_code(self):
+        if self.language == 'python':
+            suffix = '.py'
+        elif self.language == 'matlab':
+            suffix = '.mat'
+        else:
+            raise NotImplementedError
+
+        cb_name = self.nb_buffer.name.split('/')[-1]
+        script_name = cb_name.split('.')[0] + suffix
+        self.write_buffer()
+        with open(script_name, "w") as sf:
+            for name in self.vim_ipynb_cells:
+                if self.vim_ipynb_cells[name]['cell_type'] == "code":
+                    sf.write(self.vim_ipynb_cells[name]['sources'])
+
+
+
+
     #output method
 
     def embed_output(self, name, msg):
