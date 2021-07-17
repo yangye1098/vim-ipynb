@@ -16,7 +16,7 @@
 3. Syntax highlighting support through vim-pandoc-syntax.
 4. Create markdown and code cells. 
 5. Run codes in code cells.
-6. Convert .ipynb files into pandoc, markdown, html, pdf. 
+6. Convert .ipynb files into pandoc, markdown, html, pdf, or corresponding script files
 
 
 # Syntax 
@@ -73,6 +73,7 @@ For running current code cell command, code can only be run when cursor is insid
     :ToHtml
     :ToMd
     :ToPdf
+    :ToCode
 
 ## Output related Commands
     :ClearAll Clear all output from code cells.
