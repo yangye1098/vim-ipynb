@@ -92,6 +92,11 @@ def print_kernel_name(name):
     global vim_jupyter_formatter
     #print(vim_jupyter_formatter[name].get_kernel_name())
 
+def get_language(name):
+    global vim_jupyter_formatter
+    return vim_jupyter_formatter[name].get_language()
+
+
 def clean_up(name):
     if name in vim_jupyter:
         #if vim_jupyter_wrapper[name] is not None:

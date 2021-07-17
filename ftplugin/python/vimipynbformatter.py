@@ -306,12 +306,15 @@ class VimIpynbFormatter():
         self.nb_buffer.append(msg_list, last_row)
         return last_row + len(msg_list)
 
+    def get_language(self):
+        return self.kernel_language
 
     def get_kernel_name(self):
         if self.kernel_language:
             return self.kernel_specs[self.kernel_language]["name"]
         else:
             return ""
+
 
     def update_notebook_info(self):
         self.vim_ipynb_nb.nbformat = current_nbformat

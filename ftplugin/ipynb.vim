@@ -17,12 +17,28 @@ vim_jupyter_path = str(vim_expand('<sfile>:p:h'), 'utf-8') + "/python"
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
 launch(vim.current.buffer.name)
+
+currentLanguage = get_language()
+
+if currentLanguage == 'python'
+    suffix = 'py' 
+elif currentLanguage == 'matlab'
+    suffix = 'm' 
+elif currentLanguage == '':
+    suffix = ''
+else:
+    raise NotImplementedError
+
+    
+ultisnapcmd = 'UltiSnipsAddFiletypes ipynb.'+suffix
+vim.command(ultisnapcmd)
 EOF
 
 
 au BufWritePost *.ipynb pythonx vim_jupyter_formatter[vim.current.buffer.name].to_ipynb()
 au BufDelete *.ipynb pythonx clean_up(vim.current.buffer.name)
 au VimLeave * pythonx clean_all()
+
 
 
 " Wrap python function to vim command
