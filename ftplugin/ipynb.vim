@@ -20,17 +20,9 @@ launch(vim.current.buffer.name)
 
 currentLanguage = get_language()
 
-if currentLanguage == 'python'
-    suffix = 'py' 
-elif currentLanguage == 'matlab'
-    suffix = 'm' 
-elif currentLanguage == '':
-    suffix = ''
-else:
-    raise NotImplementedError
 
     
-ultisnapcmd = 'UltiSnipsAddFiletypes ipynb.'+suffix
+ultisnapcmd = 'UltiSnipsAddFiletypes ipynb.pandoc'+currentLanguage
 vim.command(ultisnapcmd)
 EOF
 
