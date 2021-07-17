@@ -105,7 +105,7 @@ class VimIpynbFormatter():
         with open(script_name, "w") as sf:
             for name in self.vim_ipynb_cells:
                 if self.vim_ipynb_cells[name]['cell_type'] == "code":
-                    sf.write(self.vim_ipynb_cells[name]['sources'])
+                    sf.write(self.vim_ipynb_cells[name]['source'])
 
 
 
