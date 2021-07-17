@@ -33,7 +33,7 @@ command! -nargs=0 ToPandoc                :pythonx vim_jupyter_formatter[vim.cur
 command! -nargs=0 ToHtml                  :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_html()
 command! -nargs=0 ToMd                    :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_markdown()
 command! -nargs=0 ToPdf                   :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_pdf()
-command! -nargs=0 ToScript                :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_script()
+command! -nargs=0 ToCode                  :pythonx vim_jupyter_formatter[vim.current.buffer.name].to_code()
 command! -nargs=0 ClearAll                :pythonx vim_jupyter_formatter[vim.current.buffer.name].clear_all_output()
 
 
@@ -64,7 +64,7 @@ noremap  <Plug>(ToPandoc)                :ToPandoc<CR>
 noremap  <Plug>(ToHtml)                  :ToHtml<CR>
 noremap  <Plug>(ToMd)                    :ToMd<CR>
 noremap  <Plug>(ToPdf)                   :ToPdf<CR>
-noremap  <Plug>(ToScript)                :ToScript<CR>
+noremap  <Plug>(ToCode)                :ToCode<CR>
 noremap  <Plug>(ClearAll)                :ClearAll<CR>
 
 noremap  <Plug>(ConnectToPreviousKernel) :ConnectToPreviousKernel<CR>
