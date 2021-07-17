@@ -19,9 +19,7 @@ from vimjupytermanager import *
 launch(vim.current.buffer.name)
 
 currentLanguage = get_language(vim.current.buffer.name)
-
-print(currentLanguage)
-    
+   
 ultisnapcmd = 'UltiSnipsAddFiletypes ipynb.pandoc.'+currentLanguage
 vim.command(ultisnapcmd)
 EOF
