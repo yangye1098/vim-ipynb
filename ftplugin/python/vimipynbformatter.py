@@ -92,9 +92,9 @@ class VimIpynbFormatter():
         self.writer.write(body, resources, notebook_name = notebook_name)
 
     def to_code(self):
-        if self.language == 'python':
+        if self.kernel_language == 'python':
             suffix = '.py'
-        elif self.language == 'matlab':
+        elif self.kernel_language == 'matlab':
             suffix = '.mat'
         else:
             raise NotImplementedError
