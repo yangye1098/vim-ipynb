@@ -20,6 +20,7 @@ sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
 launch(vim.current.buffer.name)
 
+print(vim.current.buffer.name)
 currentLanguage = get_language(vim.current.buffer.name)
    
 ultisnapcmd = 'UltiSnipsAddFiletypes ipynb.pandoc.'+currentLanguage
