@@ -34,6 +34,7 @@ class VimJupyterShellWrapper():
         if self.in_cell(pos) is False:
             return
         line = vim.current.buffer[pos[0]-1]
+        print(line)
         self.shell.run_line(line, store_history=True)
         cursor(pos[0]+1, pos[1])
 

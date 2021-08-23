@@ -13,14 +13,12 @@ import sys
 import vim
 vim_expand = vim.Function('expand')
 
-#vim_jupyter_path = str(vim_expand('<sfile>:p:h'), 'utf-8') + "/python"
-vim_jupyter_path = "/home/yangye/.vim/myplugin/vim-ipynb/ftplugin/python"
+vim_jupyter_path = str(vim_expand('<sfile>:p:h'), 'utf-8') + "/python"
 
 sys.path.append(vim_jupyter_path)
 from vimjupytermanager import *
 launch(vim.current.buffer.name)
 
-print(vim.current.buffer.name)
 currentLanguage = get_language(vim.current.buffer.name)
    
 ultisnapcmd = 'UltiSnipsAddFiletypes ipynb.pandoc.'+currentLanguage

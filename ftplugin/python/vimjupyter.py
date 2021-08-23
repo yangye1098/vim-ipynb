@@ -5,6 +5,8 @@ A vim jupyter frontend running along with vim
 # Modified from JupyterConsoleApp whose Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+#TODO: clean up the code and modify from zmqconsole instead of JupyterConsoleAPP
+
 import atexit
 import os
 import signal

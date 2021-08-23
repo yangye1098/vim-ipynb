@@ -277,14 +277,16 @@ class VimJupyterShell(LoggingConfigurable):
         # Get the is_complete response:
         msg = None
         try:
-            msg = self.client.shell_channel.get_msg(
-                    block=True, timeout=timeout)
+            msg = self.client.get_shell_msg(timeout=timeout)
         except Empty:
             print('The kernel did not respond to an is_complete_request. '
                   'Setting `use_kernel_is_complete` to False.')
             self.use_kernel_is_complete = False
             return False, ""
         # Handle response:
+
+        #print(msg)
+
         if msg["parent_header"].get("msg_id", None) != msg_id:
             print('The kernel did not respond properly\
                     to an is_complete_request: %s.' % str(msg))
@@ -383,8 +385,9 @@ class VimJupyterShell(LoggingConfigurable):
 
         # flush stale replies, which could have been ignored,
         # due to missed heartbeats
-        while self.client.shell_channel.msg_ready():
-            self.client.shell_channel.get_msg()
+
+        self.client.wait_for_ready()
+
         # execute takes 'hidden', which is the inverse of store_hist
         msg_id = self.client.execute(cell, not store_history)
 
@@ -403,10 +406,13 @@ class VimJupyterShell(LoggingConfigurable):
                     raise
 
         # after all of that is done, wait for the execute reply
+
         while self.client.is_alive():
             try:
                 self.handle_execute_reply(msg_id, name, timeout=0.05)
+                break
             except Empty:
+                break
                 pass
             else:
                 break
@@ -418,10 +424,8 @@ class VimJupyterShell(LoggingConfigurable):
     # -----------------
 
     def handle_execute_reply(self, msg_id, name="", timeout=None):
-        msg = self.client.shell_channel.get_msg(block=False, timeout=timeout)
+        msg = self.client.get_shell_msg(timeout=timeout)
         if msg["parent_header"].get("msg_id", None) == msg_id:
-
-            self.handle_iopub(msg_id, name)
 
             content = msg["content"]
             status = content['status']
@@ -491,103 +495,104 @@ class VimJupyterShell(LoggingConfigurable):
         output_prompt = self.vim_display_manager.handle_prompt
         clear_buffer = self.vim_display_manager.clear_stdout_buffer
 
-        while self.client.iopub_channel.msg_ready():
-            sub_msg = self.client.iopub_channel.get_msg()
-            # print(sub_msg)
-            msg_type = sub_msg['header']['msg_type']
-            # parent = sub_msg["parent_header"]
 
-            # Update execution_count in case it changed in another session
-            if msg_type == "execute_input":
-                self.execution_count = int(
-                    sub_msg["content"]["execution_count"]) + 1
+        # get io channel blocking
+        sub_msg = self.client.get_iopub_msg()
 
-            if self.include_output(sub_msg):
-                if msg_type == 'status':
-                    self._execution_state = \
-                            sub_msg["content"]["execution_state"]
-                elif msg_type == 'stream':
-                    if sub_msg["content"]["name"] == "stdout":
-                        if self._pending_clearoutput:
-                            clear_buffer()
-                            self._pending_clearoutput = False
-                        output_prompt(
-                                "\nOut[{}]: ".format(self.execution_count))
-                        output_handler(
-                            sub_msg["content"]["text"])
-                        self.vim_ipynb_formatter.embed_output(
-                                name, sub_msg)
-                    elif sub_msg["content"]["name"] == "stderr":
-                        if self._pending_clearoutput:
-                            clear_buffer()
-                            self._pending_clearoutput = False
-                        output_handler(
-                            sub_msg["content"]["text"])
-                        self.vim_ipynb_formatter.embed_output(
-                                name, sub_msg)
+        msg_type = sub_msg['header']['msg_type']
+        # parent = sub_msg["parent_header"]
 
-                elif msg_type == 'execute_result':
+        # Update execution_count in case it changed in another session
+        if msg_type == "execute_input":
+            self.execution_count = int(
+                sub_msg["content"]["execution_count"]) + 1
+
+        if self.include_output(sub_msg):
+            if msg_type == 'status':
+                self._execution_state = \
+                        sub_msg["content"]["execution_state"]
+            elif msg_type == 'stream':
+                if sub_msg["content"]["name"] == "stdout":
                     if self._pending_clearoutput:
                         clear_buffer()
                         self._pending_clearoutput = False
-                    self.execution_count = int(
-                        sub_msg["content"]["execution_count"])
-                    self.vim_ipynb_formatter.embed_output(
-                                name, sub_msg)
-                    output_prompt("\nOut[{}]: ".format(self.execution_count))
-
-                    if not self.from_here(sub_msg):
-                        output_handler(
-                            self.other_output_prefix)
-                    format_dict = sub_msg["content"]["data"]
-                    self.handle_rich_data(format_dict)
-
-                    if 'text/plain' not in format_dict:
-                        continue
-
-                    # output_handler("Out[{}]: ".format(self.execution_count))
-                    text_repr = format_dict['text/plain']
-                    if '\n' in text_repr:
-                        # For multi-line results, start a new line after prompt
-                        output_handler()
-                    output_handler(text_repr)
-
-                elif msg_type == 'display_data':
-                    data = sub_msg["content"]["data"]
-                    handled = self.handle_rich_data(data)
-                    self.vim_ipynb_formatter.embed_output(
-                                          name, sub_msg)
-                    if not handled:
-                        if not self.from_here(sub_msg):
-                            output_handler(
-                                self.other_output_prefix)
-                        # if it was an image, we handled it by now
-                        if 'text/plain' in data:
-                            output_handler(
-                                data['text/plain'])
-
-                elif msg_type == 'execute_input':
-                    content = sub_msg['content']
-                    if not self.from_here(sub_msg):
-                        output_handler(
-                            self.other_output_prefix)
                     output_prompt(
-                        "In [{0}]: ".format(content['execution_count']))
+                            "\nOut[{}]: ".format(self.execution_count))
                     output_handler(
-                        content['code'])
-
-                elif msg_type == 'clear_output':
-                    if sub_msg["content"]["wait"]:
-                        self._pending_clearoutput = True
-                    else:
-                        clear_buffer()
-                        self.vim_ipynb_formatter.clear_output()
-
-                elif msg_type == 'error':
-                    for frame in sub_msg["content"]["traceback"]:
-                        output_handler(frame)
+                        sub_msg["content"]["text"])
                     self.vim_ipynb_formatter.embed_output(
-                                            name, sub_msg)
+                            name, sub_msg)
+                elif sub_msg["content"]["name"] == "stderr":
+                    if self._pending_clearoutput:
+                        clear_buffer()
+                        self._pending_clearoutput = False
+                    output_handler(
+                        sub_msg["content"]["text"])
+                    self.vim_ipynb_formatter.embed_output(
+                            name, sub_msg)
+
+            elif msg_type == 'execute_result':
+                if self._pending_clearoutput:
+                    clear_buffer()
+                    self._pending_clearoutput = False
+                self.execution_count = int(
+                    sub_msg["content"]["execution_count"])
+                self.vim_ipynb_formatter.embed_output(
+                            name, sub_msg)
+                output_prompt("\nOut[{}]: ".format(self.execution_count))
+
+                if not self.from_here(sub_msg):
+                    output_handler(
+                        self.other_output_prefix)
+                format_dict = sub_msg["content"]["data"]
+                self.handle_rich_data(format_dict)
+
+                if 'text/plain' not in format_dict:
+                    pass
+
+                # output_handler("Out[{}]: ".format(self.execution_count))
+                text_repr = format_dict['text/plain']
+                if '\n' in text_repr:
+                    # For multi-line results, start a new line after prompt
+                    output_handler()
+                output_handler(text_repr)
+
+            elif msg_type == 'display_data':
+                data = sub_msg["content"]["data"]
+                handled = self.handle_rich_data(data)
+                self.vim_ipynb_formatter.embed_output(
+                                      name, sub_msg)
+                if not handled:
+                    if not self.from_here(sub_msg):
+                        output_handler(
+                            self.other_output_prefix)
+                    # if it was an image, we handled it by now
+                    if 'text/plain' in data:
+                        output_handler(
+                            data['text/plain'])
+
+            elif msg_type == 'execute_input':
+                content = sub_msg['content']
+                if not self.from_here(sub_msg):
+                    output_handler(
+                        self.other_output_prefix)
+                output_prompt(
+                    "In [{0}]: ".format(content['execution_count']))
+                output_handler(
+                    content['code'])
+
+            elif msg_type == 'clear_output':
+                if sub_msg["content"]["wait"]:
+                    self._pending_clearoutput = True
+                else:
+                    clear_buffer()
+                    self.vim_ipynb_formatter.clear_output()
+
+            elif msg_type == 'error':
+                for frame in sub_msg["content"]["traceback"]:
+                    output_handler(frame)
+                self.vim_ipynb_formatter.embed_output(
+                                        name, sub_msg)
 
     _imagemime = {
         'image/png': 'png',
@@ -661,7 +666,7 @@ class VimJupyterShell(LoggingConfigurable):
     def handle_input_request(self, msg_id, timeout=0.1):
         """ Method to capture raw_input
         """
-        req = self.client.stdin_channel.get_msg(timeout=timeout)
+        req = self.client.get_stdin_msg(timeout=timeout)
         # in case any iopub came while we were waiting:
         self.handle_iopub(msg_id)
         if msg_id == req["parent_header"].get("msg_id"):
@@ -692,6 +697,5 @@ class VimJupyterShell(LoggingConfigurable):
                 signal.signal(signal.SIGINT, real_handler)
             # only send stdin reply if there *was not* another request
             # or execution finished while we were reading.
-            if not (self.client.stdin_channel.msg_ready()
-                    or self.client.shell_channel.msg_ready()):
-                self.client.input(raw_data)
+            self.client.wait_for_ready()
+            self.client.input(raw_data)
